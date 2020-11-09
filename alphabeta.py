@@ -1,4 +1,5 @@
 INFINITY = 1000000
+MAX_DEPTH = 50 # Don't know how big I can make this
 
 def get_piece(player, king):
     if player == 1:
@@ -27,7 +28,7 @@ def pretty_print_board(board):
     print('[ ]' + f'[{pretty_board[24]}]' + '[ ]' + f'[{pretty_board[25]}]' + '[ ]' + f'[{pretty_board[26]}]' + '[ ]' + f'[{pretty_board[27]}]')
     print(f'[{pretty_board[28]}]' + '[ ]' + f'[{pretty_board[29]}]' + '[ ]' + f'[{pretty_board[30]}]' + '[ ]' + f'[{pretty_board[31]}]' + '[ ]')
 
-def alphabeta(state, alpha = INFINITY, beta = -INFINITY):
+def alphabeta(state, alpha = -INFINITY, beta = INFINITY, depth = 0):
     # need to deep copy the state, or be able to undo moves
     print("Board:")
     pretty_print_board(state.board)
@@ -37,9 +38,11 @@ def alphabeta(state, alpha = INFINITY, beta = -INFINITY):
             return 1
         else:
             return -1
+    if depth >= MAX_DEPTH:
+        return 0 # return draw
     for m in state.get_possible_moves():
         state.move(m)
-        value = -alphabeta(state, -beta, -alpha)
+        value = -alphabeta(state, -beta, -alpha, depth + 1)
         if value > alpha:
             alpha = value
         state.board = old_board
