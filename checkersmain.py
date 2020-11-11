@@ -1,12 +1,14 @@
 from game import Game
 import random
+from time import sleep
 
 # draw_board
 # very basic cli function to draw board
 # uses the filled positions and the player pieces currently on board
-# black is a, white is b
-# kings are capitalized (ie. A, B)
+# black is b, white is w
+# kings are capitalized (ie. B, W)
 # invalid positions are periods or '.'
+# valid positions, not including player legality, are "#"
 # (assuming left to right, top to down representation of array)
 def draw_board(current_game):
     rows_to_print = []
@@ -20,7 +22,7 @@ def draw_board(current_game):
     lone_bar_exists = False
     printed_index = False
 
-    rows_to_print.append("------------------")
+    rows_to_print.append("--------------------")
 
     # iterate through each valid position
     for index in range(1,board.position_count+1):
@@ -42,13 +44,13 @@ def draw_board(current_game):
         if index in board.searcher.filled_positions:
             piece_is_king = current_piece.king
             if current_piece in board.searcher.get_pieces_by_player(1):
-                if piece_is_king: string_to_add += "A"
-                else: string_to_add += "a"
-            else:
                 if piece_is_king: string_to_add += "B"
                 else: string_to_add += "b"
+            else:
+                if piece_is_king: string_to_add += "W"
+                else: string_to_add += "w"
         else:
-            string_to_add += "."
+            string_to_add += "#"
         
         if not even_row: string_to_add += "|.|"
 
@@ -61,6 +63,7 @@ def draw_board(current_game):
                 even_row = True
             lone_bar_exists = printed_index = False
             rows_to_print.append(string_to_add)
+            rows_to_print.append("--------------------")
             string_to_add = ""
     
     for i in rows_to_print:
@@ -79,55 +82,71 @@ def draw_board(current_game):
 
 
 # letting two people play with legal moves (legal random moves)
-# check-list
-# set up legal move checker
-# set up random
-# start game
-def simulated_play():
-    # plan
-    # initialize players
-    # start with black
-    # then white
-    # use random moves just for this
-    # make function that determines legality of move
+def simulated_play(current_game):
+    # assume player 1 is black
+    # assume player 2 is white
+    game_over = False
+    current_player = 0 # for now, first player will be Black
+    current_iteration = 1
+    last_move = ""
+    while game_over == False:
+        print("----------------------------------")
+        print()
 
-    return
+        print("Current Iteration: " + str(current_iteration))
+        current_iteration += 1
 
+        current_player = current_game.whose_turn()
 
-def is_legal(player, board, piece, position):
-    # steps to determine if legal
-    # basic piece
-    # 1) diagonal to your piece?
-    # 2) position exists?
-    # 2) going to other side of board?
-    # 3) is position blank?
-    # 4) if enemy on position, is there a blank position in same direction?
+        print("Player's Turn: Black") if current_player == 1 else print("Player's Turn: White")
+        print("Last move by Previous: " + last_move)
+
+        print()
+        print("Overall Move History: " + str(current_game.moves))
+
+        draw_board(current_game)
+
+        possible_moves = current_game.get_possible_moves()
+        random_number = random.randint(0, len(possible_moves)-1)
+
+        last_move = str(possible_moves[random_number])
+        current_game.move(possible_moves[random_number])
+
+        print()
+
+        game_over =  current_game.is_over()
     
 
-    # if king, ignore going to other side of board restrictions
-
-    # --------------
-
+    print("--------------------------")
+    print("Final Iteration: " + str(current_iteration))
+    draw_board(current_game)
+    winner = current_game.get_winner()
+    if winner == 1:
+        print("Black wins.")
+    else:
+        print("White wins.")
     return
-
-
     
+
+
 
 def black_play(board):
     return
 
 def main():
-    game = Game()
+    # game = Game()
     # print(game.board.position_layout)
     # print("--------------------------")
     # print(game.board.position_layout[0][0])
 
-    print()
+    # print()
 
-    #print(game.board.searcher.filled_positions)
-    # print(game.board.searcher.player_pieces)
-    draw_board(game)
-    print(game.get_possible_moves())
+    # #print(game.board.searcher.filled_positions)
+    # # print(game.board.searcher.player_pieces)
+    # draw_board(game)
+    # print(game.get_possible_moves())
+    # print("movable player pieces for 1 =" + str(game.board.count_movable_player_pieces()))
+    # print("Turn is " + str(game.whose_turn()))
 
     # for row in range(game.board.height):
     #     for column in range(game.board.width):
@@ -137,5 +156,7 @@ def main():
     #             print("open position")
     #         # print(game.board.searcher.get_piece_by_position(current_position))
     #         # print()
+    game = Game()
+    simulated_play(game)
 
 main()
