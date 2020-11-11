@@ -1,5 +1,5 @@
 from game import Game
-import random
+from random import randint
 from time import sleep
 
 # draw_board
@@ -79,8 +79,6 @@ def draw_board(current_game):
     #         if game.board.position_is_open(current_position):
     #             print("open position")
 
-
-
 # letting two people play with legal moves (legal random moves)
 def simulated_play(current_game):
     # assume player 1 is black
@@ -107,7 +105,7 @@ def simulated_play(current_game):
         draw_board(current_game)
 
         possible_moves = current_game.get_possible_moves()
-        random_number = random.randint(0, len(possible_moves)-1)
+        random_number = randint(0, len(possible_moves)-1)
 
         last_move = str(possible_moves[random_number])
         current_game.move(possible_moves[random_number])
@@ -121,13 +119,19 @@ def simulated_play(current_game):
     print("Final Iteration: " + str(current_iteration))
     draw_board(current_game)
     winner = current_game.get_winner()
+
+    reason_for_loss = ["Winner has continuously moved without a single capture. thus ending the game.", 
+                       "The winner captured the last opponent piece, thus ending the game."]
+    run_away = current_game.move_limit_reached()
+
+    print(reason_for_loss[0]) if run_away else print(reason_for_loss[1])
+
     if winner == 1:
         print("Black wins.")
     else:
         print("White wins.")
     return
     
-
 
 
 def black_play(board):
