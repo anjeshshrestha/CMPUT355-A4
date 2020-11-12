@@ -9,14 +9,11 @@ class Board:
         self.rows = 8
         self.cols = 8
 
-        self.player1Color = "white"
-        self.player1ColorShort = "w"
-        self.player1ColorKing = "W"
-        self.player1Pieces = []
+        self.playerColor = ["","WHITE", "RED"]
+        self.playerColorShort = [".","w", "r"]
+        self.playerColorKing = [".","W", "R"]
 
-        self.player2Color = "red"
-        self.player2ColorShort = "r"
-        self.player2ColorKing = "R"
+        self.player1Pieces = []
         self.player2Pieces = []
 
     
@@ -29,11 +26,11 @@ class Board:
             for col in range(self.cols):
                 if col % 2 == ((row +  1) % 2):
                     if row < 3: #top half - player 1
-                        temp_piece = Piece(row, col, self.player1Color, self.player1ColorShort, self.player1ColorKing)
+                        temp_piece = Piece(row, col, self.playerColor[1], self.playerColorShort[1], self.playerColorKing[1])
                         self.board[row].append(temp_piece)
                         self.player1Pieces.append(temp_piece)
                     elif row > 4: #bottom half - player 2
-                        temp_piece = Piece(row, col, self.player2Color, self.player2ColorShort, self.player2ColorKing)
+                        temp_piece = Piece(row, col, self.playerColor[2], self.playerColorShort[2], self.playerColorKing[2])
                         self.board[row].append(temp_piece)
                         self.player2Pieces.append(temp_piece)
                     else:
@@ -56,7 +53,7 @@ class Board:
                 else:
                     print(self.board[row][col].colorShort, end=" ")
             print("")
-    
+        print()
     #move a piece from before to after
     # needs:
     # clean up
@@ -212,21 +209,21 @@ class Board:
         #get current piece location and move location
         row,col = move[0]
         new_row,new_col = move[1][index_move]
-        
+
+        print("Moving",self.playerColorShort[self.player], "From", (row,col), "to", (new_row,new_col))
+        #move the piece
+        self.move(row,col,new_row,new_col)
+
         #condition check to see if there is piece in the way we have to capture
         if abs(row-new_row) >1 or abs(col-new_col) > 1:
-            print("---------------------------")
-            print("Capturing")
             mid_row = (new_row+row)//2
             mid_col = (new_col+col)//2
-            print(mid_row,mid_col )
+            print("!!! Capturing", (mid_row,mid_col))
             remove_piece = self.board[mid_row][mid_col]
             remove_piece.capture()
             self.board[mid_row][mid_col] = 0
-            print("---------------------------")
-
-        #move the piece
-        self.move(row,col,new_row,new_col)
+        
+        
 
 def main():
     board = Board()
@@ -253,7 +250,7 @@ def main():
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
     print(x)
-    board.make_move(x,-3,1)
+    board.make_move(x,2,1)
     board.print_board()
     print()
 
@@ -262,31 +259,7 @@ def main():
     x = board.get_all_valid_moves()
     print(x)
     
-    board.make_move(x,3,0)
+    board.make_move(x,2,0)
     board.print_board()
-
-    '''
-    #move red to just below white
-    print("red")
-    x = board.get_valid_moves(5,2)
-    print(x)
-    board.move(5,2,4,1)
-    board.print_board()
-    
-    print("red")
-    x = board.get_valid_moves(4,1)
-    print(x)
-    board.move(4,1,3,2)
-    board.print_board()
-
-    print("red")
-    x = board.get_valid_moves(3,2)
-    print(x)
-
-    #see white capture moves
-    print("white")
-    y = board.get_valid_moves(2,1)
-    print(y)
-    '''
 
 main()
