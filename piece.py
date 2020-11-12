@@ -1,8 +1,10 @@
 class Piece:
-    def __init__(self, row, col, color):
+    def __init__(self, row, col, color, colorShort, colorKing):
         self.row = row
         self.col = col
         self.color = color
+        self.colorShort = colorShort
+        self.colorKing = colorKing
         self.king = False
         self.captured = False
     
