@@ -22,6 +22,8 @@ def draw_board(current_game):
     lone_bar_exists = False
     printed_index = False
 
+    rows_to_print.append("- Black Origin - ")
+
     rows_to_print.append("--------------------")
 
     # iterate through each valid position
@@ -66,12 +68,10 @@ def draw_board(current_game):
             rows_to_print.append("--------------------")
             string_to_add = ""
     
+    rows_to_print.append("- White Origin -")
     for i in rows_to_print:
         print(i)
         
-
-
-
     # for row in range(game.board.height):
     #     for column in range(game.board.width):
     #         current_position = game.board.position_layout[row][column]
@@ -108,59 +108,52 @@ def simulated_play(current_game):
         random_number = randint(0, len(possible_moves)-1)
 
         last_move = str(possible_moves[random_number])
+
         current_game.move(possible_moves[random_number])
 
         print()
 
         game_over =  current_game.is_over()
     
-
+    
     print("--------------------------")
+    
     print("Final Iteration: " + str(current_iteration))
     draw_board(current_game)
-    winner = current_game.get_winner()
 
-    reason_for_loss = ["Winner has continuously moved without a single capture. thus ending the game.", 
-                       "The winner captured the last opponent piece, thus ending the game."]
-    run_away = current_game.move_limit_reached()
-
-    print(reason_for_loss[0]) if run_away else print(reason_for_loss[1])
-
-    if winner == 1:
-        print("Black wins.")
-    else:
-        print("White wins.")
-    return
+    print_winner(current_game)
     
 
 
-def black_play(board):
-    return
+# print_winner(current_game)
+# current_game - an active Game object that handles the checker game.
+#
+# when game is over,
+# print the winner and why they won.
+# a circumstance exists where both players continuously run away from each other
+# thus, no winner can be deduced. This is automatically determined after
+# 40 consecutive moves without a capture.
+# if no winner, print "No conclusive winner yet."
+# By default, Black is player 1, White is player 2.
 
+def print_winner(current_game):
+    if current_game.is_over():
+        winner = current_game.get_winner()
+        reason_for_loss = ["The previous player has moved 40 times without a capture. There is no winner." , 
+                           "The winner captured the last opponent piece, thus ending the game."]
+        run_away = current_game.move_limit_reached()
+
+        if run_away:
+            print(reason_for_loss[0])
+        else:
+            print(reason_for_loss[1])
+            print("Black wins.") if winner == 1 else print("White wins.")
+    else:
+        print("No conclusive winner yet.")
+    
 def main():
-    # game = Game()
-    # print(game.board.position_layout)
-    # print("--------------------------")
-    # print(game.board.position_layout[0][0])
-
-    # print()
-
-    # #print(game.board.searcher.filled_positions)
-    # # print(game.board.searcher.player_pieces)
-    # draw_board(game)
-    # print(game.get_possible_moves())
-    # print("movable player pieces for 1 =" + str(game.board.count_movable_player_pieces()))
-    # print("Turn is " + str(game.whose_turn()))
-
-    # for row in range(game.board.height):
-    #     for column in range(game.board.width):
-    #         current_position = game.board.position_layout[row][column]
-    #         print(current_position)
-    #         if game.board.position_is_open(current_position):
-    #             print("open position")
-    #         # print(game.board.searcher.get_piece_by_position(current_position))
-    #         # print()
     game = Game()
+    #draw_board(game)
     simulated_play(game)
 
 main()
