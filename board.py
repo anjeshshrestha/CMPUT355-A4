@@ -100,6 +100,8 @@ class Board:
     #given a piece find position it can move to
     def get_valid_moves(self,row,col):
         piece = self.board[row][col]
+        if piece == 0:
+            return ["not a valid piece"]
         moves = []
         if piece.get_color() == self.bottomPlayerColor or piece.is_king():
             moves.extend(self._lookLeft("up",piece.get_row(), piece.get_column(),piece.get_color())) #bottom piece look up
