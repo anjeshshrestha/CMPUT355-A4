@@ -1,4 +1,3 @@
-from math import ceil
 class Piece:
     def __init__(self, row, col, color):
         self.row = row
