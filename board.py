@@ -1,39 +1,40 @@
 from piece import Piece
+# assume player 1 is white
+# assume player 2 is red
 class Board:
     def __init__(self):
-        self.board = None
-        self.moves = None
-        self.player = "white"
+        self.board = []
+        self.moves = []
+        self.player = 1
         self.rows = 8
         self.cols = 8
 
-        self.topPlayerColor = "white"
-        self.topPlayerColorShortCode = "w"
-        self.topPlayerPieceCount = 12
+        self.player1Color = "white"
+        self.player1ColorShort = "w"
+        self.player1Pieces = []
 
-        self.bottomPlayerColor = "red"
-        self.bottomPlayerColorShortCode = "r"
-        self.bottomPlayerPieceCount = 12
+
+        self.player2Color = "red"
+        self.player2ColorShort = "r"
+        self.player2Pieces = []
 
     
     def get_piece(self, row, col):
         return self.board[row][col]
 
     def create_board(self):
-        self.board = []
-        self.moves = []
         for row in range(self.rows):
             self.board.append([])
             for col in range(self.cols):
                 if col % 2 == ((row +  1) % 2):
-                    if row < 3: #top half
-                        temp_piece = Piece(row, col, self.topPlayerColor)
+                    if row < 3: #top half - player 1
+                        temp_piece = Piece(row, col, self.player1Color)
                         self.board[row].append(temp_piece)
-                        #print(row, col, temp_piece.get_color())
-                    elif row > 4: #bottom half
-                        temp_piece = Piece(row, col, self.bottomPlayerColor)
+                        self.player1Pieces.append(temp_piece)
+                    elif row > 4: #bottom half - player 2
+                        temp_piece = Piece(row, col, self.player2Color)
                         self.board[row].append(temp_piece)
-                        #print(row, col, temp_piece.get_color())
+                        self.player2Pieces.append(temp_piece)
                     else:
                         self.board[row].append(0)
                    
@@ -50,10 +51,10 @@ class Board:
                 
                 if self.board[row][col] == 0:
                     print(". ", end="")
-                elif self.board[row][col].get_color() == self.topPlayerColor:
-                    print(self.topPlayerColorShortCode, end=" ")
-                elif self.board[row][col].get_color() == self.bottomPlayerColor:
-                    print(self.bottomPlayerColorShortCode, end=" ")
+                elif self.board[row][col].color == self.player1Color:
+                    print(self.player1ColorShort, end=" ")
+                elif self.board[row][col].color == self.player2Color:
+                    print(self.player2ColorShort, end=" ")
             print("")
     
     #move a piece from before to after
@@ -71,10 +72,10 @@ class Board:
 
     #change turn of play, should be called from move
     def change_turn(self):
-        if self.player == self.topPlayerColor:
-            self.player = self.bottomPlayerColor
+        if self.player == self.player1Color:
+            self.player = self.player2Color
         else:
-            self.player = self.topPlayerColor
+            self.player = self.player1Color
 
     #return if speicied position is valid
     # no longer need i think
@@ -87,30 +88,44 @@ class Board:
 
     #check to see if there is a winner
     def has_winner(self):
-        return len(self.topPlayerPieceCount) == 0 or len(self.bottomPlayerPieceCount) == 0
+        return len(self.player2Pieces) == 0 or len(self.player2Pieces) == 0
     
     #if there is no more pieces left return who won
     def get_winner(self):
-        if len(self.topPlayerPieceCount) == 0:
+        if len(self.player2Pieces) == 0:
             return "bottom"
-        elif len(self.bottomPlayerPieceCount) == 0:
+        elif len(self.player2Pieces) == 0:
             return "top"
         return "none"
 
+    def get_all_valid_moves(self):
+        all_moves = []
+        if self.player == 1:
+            for piece in self.player1Pieces:
+                all_moves.extend(self.get_valid_moves(self.player,piece.row, piece.col, piece.color))
+        else:
+            for piece in self.player2Pieces:
+                all_moves.extend(self.get_valid_moves(self.player,piece.row, piece.col, piece.color))
+        return all_moves
+
     #given a piece find position it can move to
-    def get_valid_moves(self,row,col):
+    def get_valid_moves(self,player,row,col, color):
         piece = self.board[row][col]
         if piece == 0:
             return ["not a valid piece"]
         moves = []
-        if piece.get_color() == self.bottomPlayerColor or piece.is_king():
-            moves.extend(self._lookLeft("up",piece.get_row(), piece.get_column(),piece.get_color())) #bottom piece look up
-            moves.extend(self._lookRight("up",piece.get_row(), piece.get_column(),piece.get_color())) #bottom piece look up
-        if piece.get_color() == self.topPlayerColor or piece.is_king():
-            moves.extend(self._lookLeft("down",piece.get_row(), piece.get_column(),piece.get_color())) #top piece look down
-            moves.extend(self._lookRight("down",piece.get_row(), piece.get_column(),piece.get_color())) #top piece look down
+
+        if player == 1 or piece.is_king():
+            moves.extend(self._lookLeft("down",row, col,color)) #top piece move down
+            moves.extend(self._lookRight("down",row, col,color)) #top piece move down
+
+        if player == 2 or piece.is_king():
+            moves.extend(self._lookLeft("up",row, col,color)) #bottom piece move up
+            moves.extend(self._lookRight("up",row, col,color)) #bottom piece move up
         
-        return moves
+        if moves != []:
+            return [([row,col],moves)]
+        return []
 
 
     #seraches down left side of the board from given location
@@ -118,9 +133,7 @@ class Board:
     #when it encounters a piece, not its own color, 
     #          check if it can to a empty spot after captring
     #   (need to implement recursive capturing)
-    # -----in progress
-    #  capture looks like this 
-    #  capture, peice location, move location
+    # -----in progress capture
     # after getting back where it can move, call get_valid_moves to recurse
     
     def _lookLeft(self,direction,given_row,given_col,color, needEmpty = False):
@@ -138,16 +151,11 @@ class Board:
             if self.board[row][col] == 0:
                 valid_places.append((row,col))
             else:
-                if not needEmpty and self.board[row][col].get_color() != color:
+                if not needEmpty and self.board[row][col].color != color:
                     check_capture.append((row,col))
         
         for row,col in check_capture:
-            x = self._lookLeft(direction,row,col,color, True)
-            if x != []:
-                x.insert(0,(row,col))
-                x.insert(0,"capture")
-                valid_places.append(x)
-            #valid_places.extend(self._lookRight(direction,row,col,color))
+            valid_places.extend(self._lookLeft(direction,row,col,color, True))
 
         return valid_places
 
@@ -159,21 +167,18 @@ class Board:
         if direction == "down" or direction == "king":
             if given_row+1 < self.rows and given_col+1 < self.cols:
                 new_places.append((given_row+1,given_col+1)) #bottom right
+
         valid_places = []
         check_capture = []
         for row,col in new_places:
             if self.board[row][col] == 0:
                 valid_places.append((row,col))
             else:
-                if not needEmpty and self.board[row][col].get_color() != color:
+                if not needEmpty and self.board[row][col].color != color:
                     check_capture.append((row,col))
 
         for row,col in check_capture:
-            x = self._lookRight(direction,row,col,color,True)
-            if x != []:
-                x.insert(0,(row,col))
-                x.insert(0,"capture")
-                valid_places.append(x)
+            valid_places.extend(self._lookRight(direction,row,col,color,True))
 
         return valid_places
     
@@ -181,7 +186,10 @@ def main():
     board = Board()
     board.create_board()
     board.print_board()
-
+    print("Player:",board.whose_turn())
+    print(board.get_all_valid_moves())
+    
+    '''
     #move red to just below white
     print("red")
     x = board.get_valid_moves(5,2)
@@ -203,5 +211,6 @@ def main():
     print("white")
     y = board.get_valid_moves(2,1)
     print(y)
+    '''
 
 main()

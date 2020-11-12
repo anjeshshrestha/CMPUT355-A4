@@ -10,15 +10,6 @@ class Piece:
         self.row = row
         self.col = col
 
-    def get_column(self):
-        return self.col
-
-    def get_row(self):
-        return self.row
-
-    def get_color(self):
-        return self.color
-
     def can_move(self):
         return not self.captured
 
