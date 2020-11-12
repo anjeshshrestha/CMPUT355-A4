@@ -63,13 +63,24 @@ class Board:
     # check if move is valid
     # check if correct player piece is moving (white is moving white)
     def move(self,row,col, new_row,new_col):
-        temp_piece = self.board[row][col]
-        
+        piece = self.board[row][col]
+        #move the piece in pieces
+        piece.move(new_row,new_col)
+        #set new location to current piece
+        self.board[new_row][new_col] = piece
+        #set old position to free
         self.board[row][col] = 0
-        self.board[new_row][new_col] = temp_piece
-        temp_piece.move(new_row,new_col)
+
+        #make it king if at end
+        if self.player == 1 and new_row == self.rows-1:
+            piece.make_king()
+        elif self.player == 2 and new_row == 0:
+            piece.make_king()
+
+        #record the move
         self.moves.append([(row,col),(new_row,new_col)])
 
+        #change turns
         self.change_turn()
 
     #change turn of play, should be called from move
@@ -99,33 +110,37 @@ class Board:
         elif len(self.player2Pieces) == 0:
             return "Player 2 is Winner"
 
+    #itterate over all pieces of player that is not captured
+    #find moves it can make and save it a list
+    #return list
     def get_all_valid_moves(self):
         all_moves = []
         if self.player == 1:
             for piece in self.player1Pieces:
-                all_moves.extend(self.get_valid_moves(self.player,piece.row, piece.col, piece.color))
+                if not piece.captured:
+                    all_moves.extend(self.get_valid_moves(piece.row, piece.col, piece.color))
         else:
             for piece in self.player2Pieces:
-                all_moves.extend(self.get_valid_moves(self.player,piece.row, piece.col, piece.color))
+                if not piece.captured:
+                    all_moves.extend(self.get_valid_moves(piece.row, piece.col, piece.color))
         return all_moves
 
     #given a piece find position it can move to
-    def get_valid_moves(self,player,row,col, color):
+    #find places it can move to - an right
+    def get_valid_moves(self,row,col, color):
         piece = self.board[row][col]
-        if piece == 0:
-            return ["not a valid piece"]
-        moves = []
+        if piece != 0:
+            moves = []
+            if self.player == 1 or piece.king:
+                moves.extend(self._lookLeft(row, col,color)) #player 1 move down
+                moves.extend(self._lookRight(row, col,color)) #player 1 move down
 
-        if player == 1 or piece.is_king():
-            moves.extend(self._lookLeft("down",row, col,color)) #top piece move down
-            moves.extend(self._lookRight("down",row, col,color)) #top piece move down
-
-        if player == 2 or piece.is_king():
-            moves.extend(self._lookLeft("up",row, col,color)) #bottom piece move up
-            moves.extend(self._lookRight("up",row, col,color)) #bottom piece move up
-        
-        if moves != []:
-            return [([row,col],moves)]
+            if self.player == 2 or piece.king:
+                moves.extend(self._lookLeft(row, col,color)) #player 2 move up
+                moves.extend(self._lookRight(row, col,color)) #bottom piece move up
+            
+            if moves != []:
+                return [([row,col],moves)]
         return []
 
 
@@ -137,15 +152,15 @@ class Board:
     # -----in progress capture
     # after getting back where it can move, call get_valid_moves to recurse
     
-    def _lookLeft(self,direction,given_row,given_col,color, needEmpty = False):
+    def _lookLeft(self,given_row,given_col,color, needEmpty = False):
         new_places = []
-        if direction == "up" or direction == "king":
-            if given_row-1 >= 0 and given_col-1 >= 0:
-                new_places.append((given_row-1,given_col-1)) #top left
-        if direction == "down" or direction == "king":
-            if given_row+1 < self.rows and given_col-1 >= 0:
-                new_places.append((given_row+1,given_col-1)) #bottom left
-
+        #check the left side it can move to
+        if self.player == 1 and given_row+1 < self.rows and given_col-1 >= 0:
+            new_places.append((given_row+1,given_col-1)) #bottom left
+        elif self.player == 2 and given_row-1 >= 0 and given_col-1 >= 0:
+            new_places.append((given_row-1,given_col-1)) #top left
+        
+        #check if there is empty piece or enemy piece in the way
         valid_places = []
         check_capture = []
         for row,col in new_places:
@@ -154,21 +169,21 @@ class Board:
             else:
                 if not needEmpty and self.board[row][col].color != color:
                     check_capture.append((row,col))
-        
+        #if there is piece in the way, check if it can jump over to empty place
         for row,col in check_capture:
-            valid_places.extend(self._lookLeft(direction,row,col,color, True))
+            valid_places.extend(self._lookLeft(row,col,color, True))
 
         return valid_places
 
-    def _lookRight(self,direction,given_row,given_col,color,needEmpty = False):
+    def _lookRight(self,given_row,given_col,color,needEmpty = False):
+        #check the right side it can move to
         new_places = []
-        if direction == "up" or direction == "king":
-            if given_row-1 >= 0 and given_col+1 < self.cols:
-                new_places.append((given_row-1,given_col+1)) #top right
-        if direction == "down" or direction == "king":
-            if given_row+1 < self.rows and given_col+1 < self.cols:
-                new_places.append((given_row+1,given_col+1)) #bottom right
-
+        if self.player == 1 and given_row+1 < self.rows and given_col+1 < self.cols:
+            new_places.append((given_row+1,given_col+1)) #bottom right
+        elif self.player == 2 and given_row-1 >= 0 and given_col+1 < self.cols:
+            new_places.append((given_row-1,given_col+1)) #top right
+        
+        #check if there is empty piece or enemy piece in the way
         valid_places = []
         check_capture = []
         for row,col in new_places:
@@ -177,21 +192,28 @@ class Board:
             else:
                 if not needEmpty and self.board[row][col].color != color:
                     check_capture.append((row,col))
-
+        #if there is piece in the way, check if it can jump over to empty place
         for row,col in check_capture:
-            valid_places.extend(self._lookRight(direction,row,col,color,True))
+            valid_places.extend(self._lookRight(row,col,color,True))
 
         return valid_places
     
-    def make_move(self,move,index):
+    #given a move (current posititon, list of pieces with moves, index of piece, index of move)
+    #will make the move, capture any piece in the way
+    # given example:
+    #    cur       new   |   cur      new      new   |    cur     new
+    # [([1, 2], [(2, 1)]), ([3, 2], [(5, 0), (4, 3)]), ([1, 2], [(2, 1)])]
+    def make_move(self,valid_moves,index_piece, index_move):
+        #check if it has a piece location and move location
+        move = valid_moves[index_piece]
         if len(move) != 2:
             return
-        
-        row,col = move[0]
-        new_row,new_col = move[1][index]
 
-        piece = self.board[row][col]
+        #get current piece location and move location
+        row,col = move[0]
+        new_row,new_col = move[1][index_move]
         
+        #condition check to see if there is piece in the way we have to capture
         if abs(row-new_row) >1 or abs(col-new_col) > 1:
             print("---------------------------")
             print("Capturing")
@@ -203,9 +225,7 @@ class Board:
             self.board[mid_row][mid_col] = 0
             print("---------------------------")
 
-
-        #add to check if piece in way and have to capture
-
+        #move the piece
         self.move(row,col,new_row,new_col)
 
 def main():
@@ -218,7 +238,7 @@ def main():
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
     print(x)
-    board.make_move(x[0],0)
+    board.make_move(x,0,0)
     board.print_board()
     print()
     
@@ -226,14 +246,14 @@ def main():
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
     print(x)
-    board.make_move(x[0],1)
+    board.make_move(x,0,1)
     board.print_board()
 
     #red
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
     print(x)
-    board.make_move(x[-3],1)
+    board.make_move(x,-3,1)
     board.print_board()
     print()
 
@@ -242,7 +262,7 @@ def main():
     x = board.get_all_valid_moves()
     print(x)
     
-    board.make_move(x[2],0)
+    board.make_move(x,3,0)
     board.print_board()
 
     '''

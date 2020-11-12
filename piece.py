@@ -20,6 +20,3 @@ class Piece:
 
     def make_king(self):
         self.king = True
-
-    def is_king(self):
-        return self.king
