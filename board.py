@@ -98,12 +98,13 @@ class Board:
         return "none"
 
     #given a piece find position it can move to
-    def get_valid_moves(self, piece):
+    def get_valid_moves(self,row,col):
+        piece = self.board[row][col]
         moves = []
-        if piece.get_color() == self.bottomPlayerColor or piece.king:
+        if piece.get_color() == self.bottomPlayerColor or piece.is_king():
             moves.extend(self._lookLeft("up",piece.get_row(), piece.get_column(),piece.get_color())) #bottom piece look up
             moves.extend(self._lookRight("up",piece.get_row(), piece.get_column(),piece.get_color())) #bottom piece look up
-        if piece.get_color() == self.topPlayerColor or piece.king:
+        if piece.get_color() == self.topPlayerColor or piece.is_king():
             moves.extend(self._lookLeft("down",piece.get_row(), piece.get_column(),piece.get_color())) #top piece look down
             moves.extend(self._lookRight("down",piece.get_row(), piece.get_column(),piece.get_color())) #top piece look down
         
@@ -115,6 +116,7 @@ class Board:
     #when it encounters a piece, not its own color, 
     #          check if it can to a empty spot after captring
     #   (need to implement recursive capturing)
+    # -----in progress
     #  capture looks like this 
     #  capture, peice location, move location
     # after getting back where it can move, call get_valid_moves to recurse
@@ -177,22 +179,27 @@ def main():
     board = Board()
     board.create_board()
     board.print_board()
-    temp = board.board[5][2]
-    x = board.get_valid_moves(temp)
+
+    #move red to just below white
+    print("red")
+    x = board.get_valid_moves(5,2)
     print(x)
-    board.move(temp.get_row(),temp.get_column(),4,1)
+    board.move(5,2,4,1)
     board.print_board()
     
-    x = board.get_valid_moves(temp)
-
+    print("red")
+    x = board.get_valid_moves(4,1)
     print(x)
-    board.move(temp.get_row(),temp.get_column(),3,2)
+    board.move(4,1,3,2)
     board.print_board()
-    x = board.get_valid_moves(temp)
+
+    print("red")
+    x = board.get_valid_moves(3,2)
     print(x)
 
-    temp2 = board.board[2][1]
-    y = board.get_valid_moves(temp2)
+    #see white capture moves
+    print("white")
+    y = board.get_valid_moves(2,1)
     print(y)
 
 main()
