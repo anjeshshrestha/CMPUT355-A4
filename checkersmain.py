@@ -125,6 +125,27 @@ def simulated_play(current_game):
     
 
 
+def draw_iteration_details(current_game):
+    print("----------------------------------")
+    print()
+
+    current_iteration = len(current_game.moves) + 1
+    print("Current Iteration: " + str(current_iteration)) 
+
+    #
+    print(current_game.moves)
+
+    current_player = current_game.whose_turn()
+    last_move = ''
+    print()
+    if current_iteration > 1:
+        last_move = str(current_game.moves[current_iteration-2])
+    print("Player's Turn: Black") if current_game.whose_turn() == 1 else print("Player's Turn: White")
+    print("Last move by Previous: " + last_move)
+
+    print()
+    print("Overall Move History: " + str(current_game.moves))
+
 # print_winner(current_game)
 # current_game - an active Game object that handles the checker game.
 #
