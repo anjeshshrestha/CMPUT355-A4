@@ -17,7 +17,7 @@ def draw_board(current_game):
     # remember modulo whatever width to know when to cut and add to rows_to_print
     board = current_game.board
     filled_positions = board.searcher.filled_positions
-    even_row = False
+    odd_row = False
     # add single bar at beginning of odd row
     lone_bar_exists = False
     printed_index = False
@@ -36,8 +36,8 @@ def draw_board(current_game):
             string_to_add += str(index) + " "
         printed_index = True
 
-        if even_row: string_to_add += "|.|" 
-        elif not even_row and not lone_bar_exists: 
+        if not odd_row: string_to_add += "|.|" 
+        elif odd_row and not lone_bar_exists: 
             string_to_add += "|"
             lone_bar_exists = True
 
@@ -54,15 +54,15 @@ def draw_board(current_game):
         else:
             string_to_add += "#"
         
-        if not even_row: string_to_add += "|.|"
+        if odd_row: string_to_add += "|.|"
 
         # make new row to print every 4 valid positions
         if index % board.width == 0:
-            if even_row:
-                even_row = False
+            if not odd_row:
+                odd_row = True
                 string_to_add += "|"
             else:
-                even_row = True
+                odd_row = False
             lone_bar_exists = printed_index = False
             rows_to_print.append(string_to_add)
             rows_to_print.append("--------------------")
