@@ -88,19 +88,7 @@ def simulated_play(current_game):
     current_iteration = 1
     last_move = ""
     while game_over == False:
-        print("----------------------------------")
-        print()
-
-        print("Current Iteration: " + str(current_iteration))
-        current_iteration += 1
-
-        current_player = current_game.whose_turn()
-
-        print("Player's Turn: Black") if current_player == 1 else print("Player's Turn: White")
-        print("Last move by Previous: " + last_move)
-
-        print()
-        print("Overall Move History: " + str(current_game.moves))
+        draw_iteration_details(current_game,current_iteration)
 
         draw_board(current_game)
 
@@ -123,7 +111,62 @@ def simulated_play(current_game):
 
     print_winner(current_game)
     
+def human_vs_cpu_play(current_game):
+    # allow keyboard input
+    # make some sort of cli interface
+    # determine who goes first
 
+    human_turn = None
+    while human_turn == None:
+        response = input("Do you want to be first player? (type 'yes'/type anything else for 'no') > ")
+        human_turn = True if response == "yes" else False
+    
+    game_over = None
+    current_player = 1 # Black is 1, White is 2
+
+    while game_over is not True:
+        draw_iteration_details(current_game)
+        draw_board(current_game)
+        possible_moves = current_game.get_possible_moves()
+        print()
+        if human_turn: # human goes first
+            permit = False
+            move_to_go = -1
+            while permit == False:
+                print("Possible moves: " + str(possible_moves))
+                try:
+                    move_to_go = int(input("Please input your move: "))
+                    if move_to_go >= 0 and move_to_go < len(possible_moves):
+                        permit = True
+                    else: 
+                        print("Invalid. Try again.")
+                except ValueError:
+                    print("Not a number. Try again")
+            current_game.move(possible_moves[move_to_go])
+            human_turn = False
+        else:
+            cpu_play_turn(current_game)
+            human_turn = True
+        game_over = current_game.is_over()
+    
+    print("--------------------------")
+    
+    print("Final Iteration: " + str(len(current_game.moves) + 1))
+    draw_board(current_game)
+    print_winner(current_game)
+        
+
+
+def cpu_play_turn(current_game, game_strategy = 'random'):
+    # game_strategies: random, minimax. add and implement if necessary
+    if game_strategy == "random":
+        possible_moves = current_game.get_possible_moves()
+        print(possible_moves)
+        move_to_go = randint(0,len(possible_moves)-1)
+        current_game.move(possible_moves[move_to_go])
+        print("CPU moved: " + str(possible_moves[move_to_go]))
+    else:
+        return
 
 def draw_iteration_details(current_game):
     print("----------------------------------")
@@ -175,6 +218,6 @@ def print_winner(current_game):
 def main():
     game = Game()
     #draw_board(game)
-    simulated_play(game)
+    human_vs_cpu_play(game)
 
 main()
