@@ -5,7 +5,7 @@ class Board:
     def __init__(self):
         self.board = []
         self.moves = []
-        self.player = 2
+        self.player = 1
         self.rows = 8
         self.cols = 8
 
@@ -111,34 +111,48 @@ class Board:
     #find moves it can make and save it a list
     #return list
     def get_all_valid_moves(self):
-        all_moves = []
+        all_moves = {}
         if self.player == 1:
             for piece in self.player1Pieces:
                 if not piece.captured:
-                    all_moves.extend(self.get_valid_moves(piece.row, piece.col, piece.color))
+                    temp = self.get_valid_moves(piece.row, piece.col, piece.color)
+                    if temp != {'capture': [], 'non_capture': []}:
+                        all_moves[(piece.row, piece.col)] = temp
         else:
             for piece in self.player2Pieces:
                 if not piece.captured:
-                    all_moves.extend(self.get_valid_moves(piece.row, piece.col, piece.color))
+                    temp = self.get_valid_moves(piece.row, piece.col, piece.color)
+                    if temp != {'capture': [], 'non_capture': []}:
+                        all_moves[(piece.row, piece.col)] = temp
         return all_moves
+
+    def print_all_valid_moves(self):
+        temp = self.get_all_valid_moves()
+
+        for piece, moves in temp.items():
+            print(piece, moves)
 
     #given a piece find position it can move to
     #find places it can move to - an right
     def get_valid_moves(self,row,col, color):
         piece = self.board[row][col]
+        moves = {'non_capture': [], 'capture':[]}
         if piece != 0:
-            moves = []
-            if self.player == 1 or piece.king:
-                moves.extend(self._lookLeft(row, col,color)) #player 1 move down
-                moves.extend(self._lookRight(row, col,color)) #player 1 move down
-
-            if self.player == 2 or piece.king:
-                moves.extend(self._lookLeft(row, col,color)) #player 2 move up
-                moves.extend(self._lookRight(row, col,color)) #bottom piece move up
+            temp_left = self._lookLeft(row, col,row, col,color,{}) #player 1 move down
+            temp_right = self._lookRight(row, col,row, col,color,{}) #player 1 move down
             
-            if moves != []:
-                return [([row,col],moves)]
-        return []
+            moves.update(temp_left)
+            
+            if 'non_capture' in temp_right:
+                moves['non_capture'].extend(temp_right['non_capture'])
+                
+            if 'capture' in temp_right:
+                moves['capture'].extend(temp_right['capture'])
+
+            
+            if moves != {'non_capture': [], 'capture':[]}:
+                return moves
+        return moves
 
 
     #seraches down left side of the board from given location
@@ -149,70 +163,111 @@ class Board:
     # -----in progress capture
     # after getting back where it can move, call get_valid_moves to recurse
     
-    def _lookLeft(self,given_row,given_col,color, needEmpty = False):
-        new_places = []
-        #check the left side it can move to
-        if self.player == 1 and given_row+1 < self.rows and given_col-1 >= 0:
-            new_places.append((given_row+1,given_col-1)) #bottom left
-        elif self.player == 2 and given_row-1 >= 0 and given_col-1 >= 0:
-            new_places.append((given_row-1,given_col-1)) #top left
+    def _lookLeft(self,start_row,start_col, cur_row, cur_col, color, valid_places, needEmpty = False):
+        if 'capture' not in valid_places:
+            valid_places['capture'] = []
+        if 'non_capture' not in valid_places:
+            valid_places['non_capture'] = []
         
+        new_row = new_col = None
+        #check the left side it can move to
+        if self.player == 1 and cur_row+1 < self.rows and cur_col-1 >= 0:
+            new_row = cur_row+1
+            new_col = cur_col-1 #bottom left
+        elif self.player == 2 and cur_row-1 >= 0 and cur_col-1 >= 0:
+            new_row = cur_row-1
+            new_col = cur_col-1 #top left
+        else:
+            return valid_places
+                
         #check if there is empty piece or enemy piece in the way
-        valid_places = []
-        check_capture = []
-        for row,col in new_places:
-            if self.board[row][col] == 0:
-                valid_places.append((row,col))
+        check_capture = False
+        if self.board[new_row][new_col] == 0:
+            #if checking for empty place after jumping
+            if needEmpty:
+                valid_places['capture'].append((new_row,new_col))
+                #check for reJump
+                left_copy = {}
+                right_copy = {}
+                left_copy = self._lookLeft(start_row,start_col, new_row, new_col, color,left_copy)
+                right_copy = self._lookRight(start_row,start_col, new_row, new_col, color, right_copy)
+                
+                
+                if left_copy != {'non_capture': [], 'capture':[]} and left_copy != {}:
+                    print((start_row,start_col),"left:",left_copy)
+                    left_copy['capture'].insert(0,(new_row,new_col))
+                    valid_places['capture'].append(left_copy['capture'])
+                if right_copy != {'non_capture': [], 'capture':[]} and right_copy != {}:
+                    print((start_row,start_col),"right",right_copy)
+                    right_copy['capture'].insert(0,(new_row,new_col))
+                    valid_places['capture'].append(right_copy['capture'])
+                #print(valid_places)
+                
+                
             else:
-                if not needEmpty and self.board[row][col].color != color:
-                    check_capture.append((row,col))
+                valid_places['non_capture'].append([(start_row,start_col),(new_row,new_col)])
+        elif not needEmpty and self.board[new_row][new_col].color != color:
+            check_capture = True
         #if there is piece in the way, check if it can jump over to empty place
-        for row,col in check_capture:
-            valid_places.extend(self._lookLeft(row,col,color, True))
-
+        if check_capture:
+            self._lookLeft(start_row,start_col, new_row, new_col, color, valid_places, True)
+            
         return valid_places
 
-    def _lookRight(self,given_row,given_col,color,needEmpty = False):
+    def _lookRight(self,start_row,start_col, cur_row, cur_col, color, valid_places, needEmpty = False):
+        if 'capture' not in valid_places:
+            valid_places['capture'] = []
+        if 'non_capture' not in valid_places:
+            valid_places['non_capture'] = []
+        new_row = new_col = None
         #check the right side it can move to
-        new_places = []
-        if self.player == 1 and given_row+1 < self.rows and given_col+1 < self.cols:
-            new_places.append((given_row+1,given_col+1)) #bottom right
-        elif self.player == 2 and given_row-1 >= 0 and given_col+1 < self.cols:
-            new_places.append((given_row-1,given_col+1)) #top right
+        if self.player == 1 and cur_row+1 < self.rows and cur_col+1 < self.cols:
+            new_row = cur_row+1 
+            new_col = cur_col+1 # bottom right
+        elif self.player == 2 and cur_row-1 >= 0 and cur_col+1 < self.cols:
+            new_row = cur_row-1
+            new_col = cur_col+1 #top right
+        else:
+            return valid_places
         
         #check if there is empty piece or enemy piece in the way
-        valid_places = []
-        check_capture = []
-        for row,col in new_places:
-            if self.board[row][col] == 0:
-                valid_places.append((row,col))
+        check_capture = False
+        if self.board[new_row][new_col] == 0:
+            if needEmpty:
+                valid_places['capture'].append((new_row,new_col))
+                #check for reJump
+                #left_copy = dict(valid_places)
+                #right_copy = dict(valid_places)
+                #self._lookLeft(start_row,start_col, new_row, new_col, color, left_copy)
+                #self._lookRight(start_row,start_col, new_row, new_col, color, right_copy)
+                #print((start_row,start_col),"left:",left_copy)
+                #print((start_row,start_col),"right",right_copy)
             else:
-                if not needEmpty and self.board[row][col].color != color:
-                    check_capture.append((row,col))
+                valid_places['non_capture'].append([(start_row,start_col),(new_row,new_col)])
+        elif not needEmpty and self.board[new_row][new_col].color != color:
+            check_capture = True
         #if there is piece in the way, check if it can jump over to empty place
-        for row,col in check_capture:
-            valid_places.extend(self._lookRight(row,col,color,True))
+        if check_capture:
+            self._lookRight(start_row,start_col, new_row, new_col, color, valid_places, True)
 
         return valid_places
     
     #given a move (current posititon, list of pieces with moves, index of piece, index of move)
     #will make the move, capture any piece in the way
     # given example:
-    #    cur       new   |   cur      new      new   |    cur     new
-    # [([1, 2], [(2, 1)]), ([3, 2], [(5, 0), (4, 3)]), ([1, 2], [(2, 1)])]
-    def make_move(self,valid_moves,index_piece, index_move):
-        #check if it has a piece location and move location
-        move = valid_moves[index_piece]
-        if len(move) != 2:
-            return
-
+    #                   cur       new
+    # {'non_capture': [[(6, 5), (5, 6)]], 'capture': []}
+    def make_non_capture_move(self, moves, index_move):
+        moves = moves['non_capture']
         #get current piece location and move location
-        row,col = move[0]
-        new_row,new_col = move[1][index_move]
+        selected_move = moves[index_move]
+        cur_row,cur_col = selected_move[0]
+        new_row,new_col = selected_move[1]
 
-        print("Moving",self.playerColorShort[self.player], "From", (row,col), "to", (new_row,new_col))
+        print("Moving",self.playerColorShort[self.player], "From", (cur_row,cur_col), "to", (new_row,new_col))
         #move the piece
-        self.move(row,col,new_row,new_col)
+        self.move(cur_row,cur_col,new_row,new_col)
+        """
 
         #condition check to see if there is piece in the way we have to capture
         if abs(row-new_row) >1 or abs(col-new_col) > 1:
@@ -222,6 +277,7 @@ class Board:
             remove_piece = self.board[mid_row][mid_col]
             remove_piece.capture()
             self.board[mid_row][mid_col] = 0
+            """
         
         
 
@@ -229,8 +285,142 @@ def main():
     board = Board()
     board.create_board()
     board.print_board()
+    
+    #white - left
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(2,1)],0)
+    board.print_board()
+    print()
 
+    #red - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(5,2)],1)
+    board.print_board()
+    print()
 
+    #white - left
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(1,0)],0)
+    board.print_board()
+    print()
+
+    #red - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(4,3)],1)
+    board.print_board()
+    print()
+
+    #white - left
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(0,1)],0)
+    board.print_board()
+    print()
+
+    #red - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(6,1)],0)
+    board.print_board()
+    print()
+
+    #white - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(2,1)],0)
+    board.print_board()
+    print()
+    
+    #red - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(5,4)],1)
+    board.print_board()
+    print()
+    
+    #white - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(1,0)],0)
+    board.print_board()
+    print()
+
+    #red - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(4,5)],0)
+    board.print_board()
+    print()
+
+    #white - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(3,0)],0)
+    board.print_board()
+    print()
+
+    #red - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(6,3)],0)
+    board.print_board()
+    print()
+
+    #white - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(2,1)],0)
+    board.print_board()
+    print()
+
+    #red - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(5,6)],1)
+    board.print_board()
+    print()
+
+    #white - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(1,2)],0)
+    board.print_board()
+    print()
+
+     #red - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(6,5)],0)
+    board.print_board()
+    print()
+
+    #white - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    
+
+"""
     #red
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
@@ -261,5 +451,6 @@ def main():
     
     board.make_move(x,2,0)
     board.print_board()
+    """
 
 main()
