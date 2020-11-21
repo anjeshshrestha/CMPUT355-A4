@@ -1,180 +1,267 @@
 from piece import Piece
 
+
+# assume player 1 is white
+# assume player 2 is red
 class Board:
     def __init__(self):
-        self.board = None
-        self.moves = None
-        self.topPlayerPieces = None
-        self.bottomPlayerPieces = None
-        self.player = "white"
+        self.board = []
+        self.moves = []
+        self.player = 2
         self.rows = 8
         self.cols = 8
-        self.topPlayerColor = "white"
-        self.topPlayerColorShortCode = "w"
-        self.bottomPlayerColor = "red"
-        self.bottomPlayerColorShortCode = "r"
 
-    
+        self.playerColor = ["", "WHITE", "RED"]
+        self.playerColorShort = [".", "w", "r"]
+        self.playerColorKing = [".", "W", "R"]
+
+        self.player1Pieces = []
+        self.player2Pieces = []
+
     def get_piece(self, row, col):
         return self.board[row][col]
 
     def create_board(self):
-        self.board = []
-        self.moves = []
-        self.topPlayerPieces = []
-        self.bottomPlayerPieces = []
         for row in range(self.rows):
             self.board.append([])
             for col in range(self.cols):
-                if col % 2 == ((row +  1) % 2):
-                    if row < 3: #top half
-                        temp_piece = Piece(row, col, self.topPlayerColor)
+                if col % 2 == ((row + 1) % 2):
+                    if row < 3:  # top half - player 1
+                        temp_piece = Piece(row, col, self.playerColor[1], self.playerColorShort[1],
+                                           self.playerColorKing[1])
                         self.board[row].append(temp_piece)
-                        self.topPlayerPieces.append(temp_piece)
-                        #print(row, col, temp_piece.get_color())
-                    elif row > 4: #bottom half
-                        temp_piece = Piece(row, col, self.bottomPlayerColor)
+                        self.player1Pieces.append(temp_piece)
+                    elif row > 4:  # bottom half - player 2
+                        temp_piece = Piece(row, col, self.playerColor[2], self.playerColorShort[2],
+                                           self.playerColorKing[2])
                         self.board[row].append(temp_piece)
-                        self.bottomPlayerPieces.append(temp_piece)
-                        #print(row, col, temp_piece.get_color())
+                        self.player2Pieces.append(temp_piece)
                     else:
                         self.board[row].append(0)
-                   
+
                 else:
                     self.board[row].append(0)
 
-
+    # print board with padding of nubers
     def print_board(self):
         print("   0 1 2 3 4 5 6 7")
         print("   _______________")
         for row in range(self.rows):
-            print(row,end="| ")
+            print(row, end="| ")
             for col in range(self.cols):
-                
                 if self.board[row][col] == 0:
                     print(". ", end="")
-                elif self.board[row][col].get_color() == self.topPlayerColor:
-                    print(self.topPlayerColorShortCode, end=" ")
-                elif self.board[row][col].get_color() == self.bottomPlayerColor:
-                    print(self.bottomPlayerColorShortCode, end=" ")
+                elif self.board[row][col].king:
+                    print(self.board[row][col].colorKing, end=" ")
+                else:
+                    print(self.board[row][col].colorShort, end=" ")
             print("")
+        print()
 
-    def make_king(self,piece):
-        piece.make_king()
-    
-    def move(self,old_row,old_col, new_row,new_col):
-        temp_piece = self.board[old_row][old_col]
-        self.board[old_row][old_col] = 0
-        self.board[new_row][new_col] = temp_piece
-        temp_piece.move(new_row,new_col)
-        self.moves.append([(old_row,old_col),(new_row,new_col)])
+    # move a piece from before to after
+    # needs:
+    # clean up
+    # check if move is valid
+    # check if correct player piece is moving (white is moving white)
+    def move(self, row, col, new_row, new_col):
+        piece = self.board[row][col]
+        # move the piece in pieces
+        piece.move(new_row, new_col)
+        # set new location to current piece
+        self.board[new_row][new_col] = piece
+        # set old position to free
+        self.board[row][col] = 0
 
-    def valid_moves(self, row, col):
-        pass
+        # make it king if at end
+        if self.player == 1 and new_row == self.rows - 1:
+            piece.make_king()
+        elif self.player == 2 and new_row == 0:
+            piece.make_king()
 
+        # record the move
+        self.moves.append([(row, col), (new_row, new_col)])
+
+        # change turns
+        self.change_turn()
+
+    # change turn of play, should be called from move
     def change_turn(self):
-        if self.player == self.topPlayerColor:
-            self.player = self.bottomPlayerColor
+        if self.player == 1:
+            self.player = 2
         else:
-            self.player = self.topPlayerColor
+            self.player = 1
 
+    # return if speicied position is valid
+    # no longer need i think
     def valid_position(self, row, col):
         return (row >= 0 and row <= self.rows) and (col >= 0 and col <= self.cols)
 
+    # check who's turn it is to play
     def whose_turn(self):
         return self.player
 
+    # check to see if there is a winner
     def has_winner(self):
-        return len(self.topPlayerPieces) == 0 or len(self.bottomPlayerPieces) == 0
-    
+        return len(self.player2Pieces) == 0 or len(self.player2Pieces) == 0
+
+    # if there is no more pieces left return who won
     def get_winner(self):
-        if len(self.topPlayerPieces) == 0:
-            return "bottom"
-        elif len(self.bottomPlayerPieces) == 0:
-            return "top"
+        if len(self.player2Pieces) == 0:
+            return "Player 1 is Winner"
+        elif len(self.player2Pieces) == 0:
+            return "Player 2 is Winner"
 
-    def get_valid_moves(self, piece):
-        moves = []
-        if piece.get_color() == self.bottomPlayerColor or piece.king:
-            moves.extend(self._lookLeft("up",piece.get_row(), piece.get_column(),piece.get_color())) #bottom piece look up
-            moves.extend(self._lookRight("up",piece.get_row(), piece.get_column(),piece.get_color())) #bottom piece look up
-        if piece.get_color() == self.topPlayerColor or piece.king:
-            moves.extend(self._lookLeft("down",piece.get_row(), piece.get_column(),piece.get_color())) #top piece look down
-            moves.extend(self._lookRight("down",piece.get_row(), piece.get_column(),piece.get_color())) #top piece look down
-        
-        return moves
+    # itterate over all pieces of player that is not captured
+    # find moves it can make and save it a list
+    # return list
+    def get_all_valid_moves(self):
+        all_moves = []
+        if self.player == 1:
+            for piece in self.player1Pieces:
+                if not piece.captured:
+                    all_moves.extend(self.get_valid_moves(piece.row, piece.col, piece.color))
+        else:
+            for piece in self.player2Pieces:
+                if not piece.captured:
+                    all_moves.extend(self.get_valid_moves(piece.row, piece.col, piece.color))
+        return all_moves
 
-    def _lookLeft(self,direction,given_row,given_col,color):
+    # given a piece find position it can move to
+    # find places it can move to - an right
+    def get_valid_moves(self, row, col, color):
+        piece = self.board[row][col]
+        if piece != 0:
+            moves = []
+            if self.player == 1 or piece.king:
+                moves.extend(self._lookLeft(row, col, color))  # player 1 move down
+                moves.extend(self._lookRight(row, col, color))  # player 1 move down
+
+            if self.player == 2 or piece.king:
+                moves.extend(self._lookLeft(row, col, color))  # player 2 move up
+                moves.extend(self._lookRight(row, col, color))  # bottom piece move up
+
+            if moves != []:
+                return [([row, col], moves)]
+        return []
+
+    # seraches down left side of the board from given location
+    # direction is where the piece will be moving towards
+    # when it encounters a piece, not its own color,
+    #          check if it can to a empty spot after captring
+    #   (need to implement recursive capturing)
+    # -----in progress capture
+    # after getting back where it can move, call get_valid_moves to recurse
+
+    def _lookLeft(self, given_row, given_col, color, needEmpty=False):
         new_places = []
-        if direction == "up" or direction == "king":
-            if given_row-1 >= 0 and given_col-1 >= 0:
-                new_places.append((given_row-1,given_col-1)) #top left
-        if direction == "down" or direction == "king":
-            if given_row+1 < self.rows and given_col-1 >= 0:
-                new_places.append((given_row+1,given_col-1)) #bottom left
+        # check the left side it can move to
+        if self.player == 1 and given_row + 1 < self.rows and given_col - 1 >= 0:
+            new_places.append((given_row + 1, given_col - 1))  # bottom left
+        elif self.player == 2 and given_row - 1 >= 0 and given_col - 1 >= 0:
+            new_places.append((given_row - 1, given_col - 1))  # top left
 
+        # check if there is empty piece or enemy piece in the way
         valid_places = []
         check_capture = []
-        for row,col in new_places:
+        for row, col in new_places:
             if self.board[row][col] == 0:
-                valid_places.append((row,col))
+                valid_places.append((row, col))
             else:
-                if self.board[row][col].get_color() != color:
-                    check_capture.append((row,col))
-        
-        for row,col in check_capture:
-            continue
-            valid_places.extend(self._lookLeft(direction,row,col,color))
-            valid_places.extend(self._lookRight(direction,row,col,color))
+                if not needEmpty and self.board[row][col].color != color:
+                    check_capture.append((row, col))
+        # if there is piece in the way, check if it can jump over to empty place
+        for row, col in check_capture:
+            valid_places.extend(self._lookLeft(row, col, color, True))
 
         return valid_places
-    def _lookRight(self,direction,given_row,given_col,color):
+
+    def _lookRight(self, given_row, given_col, color, needEmpty=False):
+        # check the right side it can move to
         new_places = []
-        #  1 - 2
-        #  - x -
-        #  3 - 4
-        if direction == "up" or direction == "king":
-            if given_row-1 >= 0 and given_col+1 < self.cols:
-                new_places.append((given_row-1,given_col+1)) #top right
-        if direction == "down" or direction == "king":
-            if given_row+1 < self.rows and given_col+1 < self.cols:
-                new_places.append((given_row+1,given_col+1)) #bottom right
+        if self.player == 1 and given_row + 1 < self.rows and given_col + 1 < self.cols:
+            new_places.append((given_row + 1, given_col + 1))  # bottom right
+        elif self.player == 2 and given_row - 1 >= 0 and given_col + 1 < self.cols:
+            new_places.append((given_row - 1, given_col + 1))  # top right
+
+        # check if there is empty piece or enemy piece in the way
         valid_places = []
         check_capture = []
-        for row,col in new_places:
+        for row, col in new_places:
             if self.board[row][col] == 0:
-                valid_places.append((row,col))
+                valid_places.append((row, col))
             else:
-                if self.board[row][col].get_color() != color:
-                    check_capture.append((row,col))
-
-        for row,col in check_capture:
-            continue
-            valid_places.extend(self._lookLeft(direction,row,col,color))
-            valid_places.extend(self._lookRight(direction,row,col,color))
+                if not needEmpty and self.board[row][col].color != color:
+                    check_capture.append((row, col))
+        # if there is piece in the way, check if it can jump over to empty place
+        for row, col in check_capture:
+            valid_places.extend(self._lookRight(row, col, color, True))
 
         return valid_places
-    
+
+    # given a move (current posititon, list of pieces with moves, index of piece, index of move)
+    # will make the move, capture any piece in the way
+    # given example:
+    #    cur       new   |   cur      new      new   |    cur     new
+    # [([1, 2], [(2, 1)]), ([3, 2], [(5, 0), (4, 3)]), ([1, 2], [(2, 1)])]
+    def make_move(self, valid_moves, index_piece, index_move):
+        # check if it has a piece location and move location
+        move = valid_moves[index_piece]
+        if len(move) != 2:
+            return
+
+        # get current piece location and move location
+        row, col = move[0]
+        new_row, new_col = move[1][index_move]
+
+        print("Moving", self.playerColorShort[self.player], "From", (row, col), "to", (new_row, new_col))
+        # move the piece
+        self.move(row, col, new_row, new_col)
+
+        # condition check to see if there is piece in the way we have to capture
+        if abs(row - new_row) > 1 or abs(col - new_col) > 1:
+            mid_row = (new_row + row) // 2
+            mid_col = (new_col + col) // 2
+            print("!!! Capturing", (mid_row, mid_col))
+            remove_piece = self.board[mid_row][mid_col]
+            remove_piece.capture()
+            self.board[mid_row][mid_col] = 0
+
+
 def main():
     board = Board()
     board.create_board()
     board.print_board()
-    temp = board.board[5][2]
-    x = board.get_valid_moves(temp)
-    print(x)
-    board.move(temp.get_row(),temp.get_column(),4,1)
-    board.print_board()
-    
-    x = board.get_valid_moves(temp)
 
+    # red
+    print("Player:", board.whose_turn())
+    x = board.get_all_valid_moves()
     print(x)
-    board.move(temp.get_row(),temp.get_column(),3,2)
+    board.make_move(x, 0, 0)
     board.print_board()
-    x = board.get_valid_moves(temp)
+    print()
+
+    # white
+    print("Player:", board.whose_turn())
+    x = board.get_all_valid_moves()
+    print(x)
+    board.make_move(x, 0, 1)
+    board.print_board()
+
+    # red
+    print("Player:", board.whose_turn())
+    x = board.get_all_valid_moves()
+    print(x)
+    board.make_move(x, 2, 1)
+    board.print_board()
+    print()
+
+    # white
+    print("Player:", board.whose_turn())
+    x = board.get_all_valid_moves()
     print(x)
 
-    temp2 = board.board[2][1]
-    y = board.get_valid_moves(temp2)
-    print(y)
+    board.make_move(x, 2, 0)
+    board.print_board()
+
 
 main()
