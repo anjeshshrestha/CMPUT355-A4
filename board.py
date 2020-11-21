@@ -128,6 +128,7 @@ class Board:
 
     # given a piece find position it can move to
     # find places it can move to - an right
+    # returns new col and row, if it's a capturing move,
     def get_valid_moves(self, row, col, color):
         piece = self.board[row][col]
         if piece != 0:
@@ -151,8 +152,53 @@ class Board:
     #   (need to implement recursive capturing)
     # -----in progress capture
     # after getting back where it can move, call get_valid_moves to recurse
+    # returns an array of two arrays, the next valid place to move to and the piece that's being captured
+    # if there is no piece being captured, the second array is empty
 
-    def _lookLeft(self, given_row, given_col, color, needEmpty=False):
+    def _lookLeftBottom(self, given_row, given_col, color, needEmpty=False):
+        new_places = []
+        # check the left side it can move to
+        if self.player == 1 and given_row + 1 < self.rows and given_col - 1 >= 0:
+            new_places.append((given_row + 1, given_col - 1))  # bottom left
+
+        # check if there is empty piece or enemy piece in the way
+        valid_place = []
+        capture_piece = []
+
+        # if the current position (new position after moving the piece to bottom left) is empty
+        #   return the this position as new position and empty capture_piece array
+        for row, col in new_places:
+            if self.board[row][col] == 0:
+                valid_place.extend([row, col])
+                next_move = [valid_place, capture_piece]
+
+                return next_move
+            #
+            # if the current position (new position after moving piece to bottom left) is not empty
+            #     check if there exists an enemy piece
+            #         if yes: check the position over this enemy piece, if it's within board
+            #             if yes: check if it's empty
+            #                 if yes: return that location as valid_place and return the enemy piece location as capture_piece
+            #
+            else:
+                if not needEmpty and self.board[row][col].color != color:
+                    if self.player == 1 and row + 1 < self.rows and col - 1 >= 0:
+                        if self.board[row + 1][col + 1] == 0:
+                            capture_piece.extend([row, col])
+
+                            valid_place.extend([row+1, col+1])
+                        else:
+                            next_move = [valid_place, capture_piece]
+
+                            return next_move
+
+        next_move = [valid_place, capture_piece]
+
+        return next_move
+
+    # TODO: replicate the rest as lookLeftBottom
+
+    def _lookLeftTop(self, given_row, given_col, color, needEmpty=False):
         new_places = []
         # check the left side it can move to
         if self.player == 1 and given_row + 1 < self.rows and given_col - 1 >= 0:
@@ -166,6 +212,9 @@ class Board:
         for row, col in new_places:
             if self.board[row][col] == 0:
                 valid_places.append((row, col))
+                next_move = [valid_places, check_capture]
+
+                return next_move
             else:
                 if not needEmpty and self.board[row][col].color != color:
                     check_capture.append((row, col))
@@ -173,7 +222,9 @@ class Board:
         for row, col in check_capture:
             valid_places.extend(self._lookLeft(row, col, color, True))
 
-        return valid_places
+        next_move = [valid_places, check_capture]
+
+        return next_move
 
     def _lookRight(self, given_row, given_col, color, needEmpty=False):
         # check the right side it can move to
@@ -189,6 +240,9 @@ class Board:
         for row, col in new_places:
             if self.board[row][col] == 0:
                 valid_places.append((row, col))
+                next_move = [valid_places, check_capture]
+
+                return next_move
             else:
                 if not needEmpty and self.board[row][col].color != color:
                     check_capture.append((row, col))
@@ -196,7 +250,9 @@ class Board:
         for row, col in check_capture:
             valid_places.extend(self._lookRight(row, col, color, True))
 
-        return valid_places
+        next_move = [valid_places, check_capture]
+
+        return next_move
 
     # given a move (current posititon, list of pieces with moves, index of piece, index of move)
     # will make the move, capture any piece in the way
