@@ -311,7 +311,7 @@ def main():
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
     board.print_all_valid_moves()
-    board.make_non_capture_move(x[(1,0)],0)
+    board.make_non_capture_move(x[(2,3)],0)
     board.print_board()
     print()
 
@@ -319,15 +319,16 @@ def main():
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
     board.print_all_valid_moves()
-    board.make_non_capture_move(x[(4,3)],1)
+    board.make_non_capture_move(x[(4,3)],0)
     board.print_board()
     print()
 
-    #white - left
+
+ #white - left
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
     board.print_all_valid_moves()
-    board.make_non_capture_move(x[(0,1)],0)
+    board.make_non_capture_move(x[(3,2)],0)
     board.print_board()
     print()
 
@@ -335,18 +336,34 @@ def main():
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
     board.print_all_valid_moves()
-    board.make_non_capture_move(x[(6,1)],0)
+    board.make_non_capture_move(x[(3,4)],0)
     board.print_board()
     print()
 
-    #white - right
+     #white - left
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(1,2)],0)
+    board.print_board()
+    print()
+
+    #red - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(2,3)],0)
+    board.print_board()
+    print()
+
+     #white - left
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
     board.print_all_valid_moves()
     board.make_non_capture_move(x[(2,1)],0)
     board.print_board()
     print()
-    
+
     #red - right
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
@@ -354,8 +371,8 @@ def main():
     board.make_non_capture_move(x[(5,4)],1)
     board.print_board()
     print()
-    
-    #white - right
+
+ #white - left
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
     board.print_all_valid_moves()
@@ -371,43 +388,11 @@ def main():
     board.print_board()
     print()
 
-    #white - right
+     #white - left
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
     board.print_all_valid_moves()
-    board.make_non_capture_move(x[(3,0)],0)
-    board.print_board()
-    print()
-
-    #red - right
-    print("Player:",board.whose_turn())
-    x = board.get_all_valid_moves()
-    board.print_all_valid_moves()
-    board.make_non_capture_move(x[(6,3)],0)
-    board.print_board()
-    print()
-
-    #white - right
-    print("Player:",board.whose_turn())
-    x = board.get_all_valid_moves()
-    board.print_all_valid_moves()
-    board.make_non_capture_move(x[(2,1)],0)
-    board.print_board()
-    print()
-
-    #red - right
-    print("Player:",board.whose_turn())
-    x = board.get_all_valid_moves()
-    board.print_all_valid_moves()
-    board.make_non_capture_move(x[(5,6)],1)
-    board.print_board()
-    print()
-
-    #white - right
-    print("Player:",board.whose_turn())
-    x = board.get_all_valid_moves()
-    board.print_all_valid_moves()
-    board.make_non_capture_move(x[(1,2)],0)
+    board.make_non_capture_move(x[(3,2)],0)
     board.print_board()
     print()
 
@@ -415,13 +400,44 @@ def main():
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
     board.print_all_valid_moves()
-    board.make_non_capture_move(x[(6,5)],0)
+    board.make_non_capture_move(x[(5,6)],1)
     board.print_board()
     print()
 
+      #white - left
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(4,1)],0)
+    board.print_board()
+    print()
+
+      #red - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(6,7)],0)
+    board.print_board()
+    print()
+
+      #white - left
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(2,1)],0)
+    board.print_board()
+    print()
+
+ #red - right
+    print("Player:",board.whose_turn())
+    x = board.get_all_valid_moves()
+    board.print_all_valid_moves()
+    board.make_non_capture_move(x[(6,3)],0)
+    board.print_board()
+    print()
+    
     #white - right
     print("Player:",board.whose_turn())
     x = board.get_all_valid_moves()
     board.print_all_valid_moves()
-    
 main()
