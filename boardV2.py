@@ -194,15 +194,13 @@ class Board:
                 
                 
                 if left_copy != {'non_capture': [], 'capture':[]} and left_copy != {}:
-                    print((start_row,start_col),"left:",left_copy)
+                    #print((start_row,start_col),"left:",left_copy)
                     left_copy['capture'].insert(0,(new_row,new_col))
                     valid_places['capture'].append(left_copy['capture'])
                 if right_copy != {'non_capture': [], 'capture':[]} and right_copy != {}:
-                    print((start_row,start_col),"right",right_copy)
+                    #print((start_row,start_col),"right",right_copy)
                     right_copy['capture'].insert(0,(new_row,new_col))
                     valid_places['capture'].append(right_copy['capture'])
-                #print(valid_places)
-                
                 
             else:
                 valid_places['non_capture'].append([(start_row,start_col),(new_row,new_col)])
@@ -236,12 +234,19 @@ class Board:
             if needEmpty:
                 valid_places['capture'].append((new_row,new_col))
                 #check for reJump
-                #left_copy = dict(valid_places)
-                #right_copy = dict(valid_places)
-                #self._lookLeft(start_row,start_col, new_row, new_col, color, left_copy)
-                #self._lookRight(start_row,start_col, new_row, new_col, color, right_copy)
-                #print((start_row,start_col),"left:",left_copy)
-                #print((start_row,start_col),"right",right_copy)
+                left_copy = {}
+                right_copy = {}
+                left_copy = self._lookLeft(start_row,start_col, new_row, new_col, color,left_copy)
+                right_copy = self._lookRight(start_row,start_col, new_row, new_col, color, right_copy)
+                
+                if left_copy != {'non_capture': [], 'capture':[]} and left_copy != {}:
+                    #print((start_row,start_col),"left:",left_copy)
+                    left_copy['capture'].insert(0,(new_row,new_col))
+                    valid_places['capture'].append(left_copy['capture'])
+                if right_copy != {'non_capture': [], 'capture':[]} and right_copy != {}:
+                    #print((start_row,start_col),"right",right_copy)
+                    right_copy['capture'].insert(0,(new_row,new_col))
+                    valid_places['capture'].append(right_copy['capture'])
             else:
                 valid_places['non_capture'].append([(start_row,start_col),(new_row,new_col)])
         elif not needEmpty and self.board[new_row][new_col].color != color:
@@ -419,38 +424,4 @@ def main():
     x = board.get_all_valid_moves()
     board.print_all_valid_moves()
     
-
-"""
-    #red
-    print("Player:",board.whose_turn())
-    x = board.get_all_valid_moves()
-    print(x)
-    board.make_move(x,0,0)
-    board.print_board()
-    print()
-    
-    #white
-    print("Player:",board.whose_turn())
-    x = board.get_all_valid_moves()
-    print(x)
-    board.make_move(x,0,1)
-    board.print_board()
-
-    #red
-    print("Player:",board.whose_turn())
-    x = board.get_all_valid_moves()
-    print(x)
-    board.make_move(x,2,1)
-    board.print_board()
-    print()
-
-    #white
-    print("Player:",board.whose_turn())
-    x = board.get_all_valid_moves()
-    print(x)
-    
-    board.make_move(x,2,0)
-    board.print_board()
-    """
-
 main()
