@@ -1,10 +1,10 @@
 from piece import Piece
 
-
 TOPLEFT = 0
 TOPRIGHT = 1
 BOTTOMLEFT = 2
 BOTTOMRIGHT = 3
+
 
 # assume player 1 is white
 # assume player 2 is red
@@ -163,13 +163,52 @@ class Board:
                     self._lookForMove(row, col, color, TOPLEFT)  # player 2 move top left
                     self._lookForMove(row, col, color, TOPRIGHT)  # player 2 move top right
 
-
             if moves != []:
                 return [([row, col], moves)]
         return []
 
+    def lookForCapture(self, row, col, color, direction):
+        capture_piece = []
+        valid_place = []
+        if direction == TOPLEFT:
+            if row - 1 >= 0 and col - 1 >= 0:
+                if self.board[row - 1][col - 1] == 0:
+                    capture_piece.extend([row, col])
+                    valid_place.extend([row - 1, col - 1])
+                else:
+                    next_move = [valid_place, capture_piece]
 
+                    return next_move
+        elif direction == TOPRIGHT:
+            if row - 1 >= 0 and col + 1 < self.cols:
+                if self.board[row - 1][col + 1] == 0:
+                    capture_piece.extend([row, col])
+                    valid_place.extend([row - 1, col + 1])
+                else:
+                    next_move = [valid_place, capture_piece]
 
+                    return next_move
+        elif direction == BOTTOMRIGHT:
+            if row + 1 < self.rows and col + 1 < self.cols:
+                if self.board[row + 1][col + 1] == 0:
+                    capture_piece.extend([row, col])
+                    valid_place.extend([row + 1, col + 1])
+                else:
+                    next_move = [valid_place, capture_piece]
+
+                    return next_move
+        elif direction == BOTTOMLEFT:
+            if row + 1 < self.rows and col - 1 >= 0:
+                if self.board[row + 1][col - 1] == 0:
+                    capture_piece.extend([row, col])
+                    valid_place.extend([row + 1, col - 1])
+                else:
+                    next_move = [valid_place, capture_piece]
+
+                    return next_move
+        next_move = [valid_place, capture_piece]
+
+        return next_move
 
     # seraches down left side of the board from given location
     # direction is where the piece will be moving towards
@@ -196,7 +235,7 @@ class Board:
         # check if there is empty piece or enemy piece in the way
         valid_place = []
         capture_piece = []
-
+        next_move = []
         # if the current position (new position after moving the piece to bottom left) is empty
         #   return the this
         #   position as new position and empty capture_piece array
@@ -206,7 +245,7 @@ class Board:
                 next_move = [valid_place, capture_piece]
 
                 return next_move
-            #
+
             # if the current position (new position after moving piece to bottom left) is not empty
             #     check if there exists an enemy piece
             #         if yes: check the position over this enemy piece, if it's within board
@@ -216,47 +255,9 @@ class Board:
             #
             else:
                 if not needEmpty and self.board[row][col].color != color:
-                    if direction == TOPLEFT:
-                        if row - 1 >= 0 and col - 1 >= 0:
-                            if self.board[row - 1][col - 1] == 0:
-                                capture_piece.extend([row, col])
-                                valid_place.extend([row - 1, col - 1])
-                            else:
-                                next_move = [valid_place, capture_piece]
-
-                                return next_move
-                    elif direction == TOPRIGHT:
-                        if row - 1 >= 0 and col + 1 < self.cols:
-                            if self.board[row - 1][col + 1] == 0:
-                                capture_piece.extend([row, col])
-                                valid_place.extend([row - 1, col + 1])
-                            else:
-                                next_move = [valid_place, capture_piece]
-
-                                return next_move
-                    elif direction == BOTTOMRIGHT:
-                        if row + 1 < self.rows and col + 1 < self.cols:
-                            if self.board[row + 1][col + 1] == 0:
-                                capture_piece.extend([row, col])
-                                valid_place.extend([row + 1, col + 1])
-                            else:
-                                next_move = [valid_place, capture_piece]
-
-                                return next_move
-                    elif direction == BOTTOMLEFT:
-                        if row + 1 < self.rows and col - 1 >= 0:
-                            if self.board[row + 1][col - 1] == 0:
-                                capture_piece.extend([row, col])
-                                valid_place.extend([row + 1, col - 1])
-                            else:
-                                next_move = [valid_place, capture_piece]
-
-                                return next_move
-
-        next_move = [valid_place, capture_piece]
+                    next_move = self.lookForCapture(row, col, color, direction)
 
         return next_move
-
 
     # given a move (current posititon, list of pieces with moves, index of piece, index of move)
     # will make the move, capture any piece in the way
