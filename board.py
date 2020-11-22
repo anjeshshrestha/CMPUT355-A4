@@ -1,3 +1,4 @@
+from sys import flags
 from piece import Piece
 
 class Board:
@@ -6,13 +7,14 @@ class Board:
         self.moves = None
         self.topPlayerPieces = None
         self.bottomPlayerPieces = None
-        self.player = "white"
+        self.player = None
         self.rows = 8
         self.cols = 8
         self.topPlayerColor = "white"
         self.topPlayerColorShortCode = "w"
         self.bottomPlayerColor = "red"
         self.bottomPlayerColorShortCode = "r"
+        self.create_board()
 
     
     def get_piece(self, row, col):
@@ -23,6 +25,7 @@ class Board:
         self.moves = []
         self.topPlayerPieces = []
         self.bottomPlayerPieces = []
+        self.player = self.topPlayerColor
         for row in range(self.rows):
             self.board.append([])
             for col in range(self.cols):
@@ -62,12 +65,18 @@ class Board:
     def make_king(self,piece):
         piece.make_king()
     
-    def move(self,old_row,old_col, new_row,new_col):
+    def move(self, old_row, old_col, new_row, new_col):
         temp_piece = self.board[old_row][old_col]
         self.board[old_row][old_col] = 0
         self.board[new_row][new_col] = temp_piece
         temp_piece.move(new_row,new_col)
         self.moves.append([(old_row,old_col),(new_row,new_col)])
+        self.change_turn()
+
+    def undo_move(self):
+        # Undo the last move
+        move = self.moves.pop()
+        return
 
     def valid_moves(self, row, col):
         pass
@@ -93,7 +102,22 @@ class Board:
         elif len(self.bottomPlayerPieces) == 0:
             return "top"
 
-    def get_valid_moves(self, piece):
+    def get_legal_moves(self):
+        # Get legal moves for player to play
+        if self.player == self.topPlayerColor:
+            pieces = self.topPlayerPieces
+        else:
+            pieces = self.bottomPlayerPieces
+
+        moves = []
+        for piece in pieces:
+            moves_for_piece = self.get_valid_moves_for_piece(piece)
+            if len(moves_for_piece) > 0:
+                moves.append(moves_for_piece)
+
+        return moves
+
+    def get_valid_moves_for_piece(self, piece):
         moves = []
         if piece.get_color() == self.bottomPlayerColor or piece.king:
             moves.extend(self._lookLeft("up",piece.get_row(), piece.get_column(),piece.get_color())) #bottom piece look up
@@ -157,24 +181,26 @@ class Board:
     
 def main():
     board = Board()
-    board.create_board()
     board.print_board()
     temp = board.board[5][2]
-    x = board.get_valid_moves(temp)
+    x = board.get_valid_moves_for_piece(temp)
     print(x)
     board.move(temp.get_row(),temp.get_column(),4,1)
     board.print_board()
     
-    x = board.get_valid_moves(temp)
+    x = board.get_valid_moves_for_piece(temp)
 
     print(x)
     board.move(temp.get_row(),temp.get_column(),3,2)
     board.print_board()
-    x = board.get_valid_moves(temp)
+    x = board.get_valid_moves_for_piece(temp)
     print(x)
 
     temp2 = board.board[2][1]
-    y = board.get_valid_moves(temp2)
+    y = board.get_valid_moves_for_piece(temp2)
     print(y)
 
-main()
+# Invoke main() if called via `python3 board.py`
+# but not if `python3 -i board.py` or `from board import *`
+if __name__ == '__main__' and not flags.interactive:
+    main()
