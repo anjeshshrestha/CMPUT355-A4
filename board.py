@@ -125,6 +125,7 @@ class Board:
             for piece in self.player1Pieces:
                 if not piece.captured:
                     all_moves.extend(self.get_valid_moves(piece.row, piece.col, piece.color))
+
         else:
             for piece in self.player2Pieces:
                 if not piece.captured:
@@ -137,6 +138,7 @@ class Board:
     # for each piece, call the lookForMove function for times with 4 directions
     # if capture_move returns not null, use the lookForMove function again
     def get_valid_moves(self, row, col, color):
+        move_lists = []
         piece = self.board[row][col]
         if piece != 0:
             moves = []
@@ -146,39 +148,28 @@ class Board:
             first_move = True
             while captured:
                 if self.player == 1 or piece.king:
-                    next_move = self._look_for_move(row, col, color, BOTTOMLEFT)  # player 1 move bottom left
-
-                    if not next_move[1]:
-                        if first_move:
-                            moves.append(next_move)
-                            first_move = False
-                        else:
-                            next_move = []
-                        captured = False
-
-                    self._look_for_move(row, col, color, BOTTOMRIGHT)  # player 1 move bottom right
-
+                    move_lists = self._look_for_move(row, col, color)  # player 1 move bottom right
                 if self.player == 2 or piece.king:
-                    self._look_for_move(row, col, color, TOPLEFT)  # player 2 move top left
-                    self._look_for_move(row, col, color, TOPRIGHT)  # player 2 move top right
+                    move_lists = self._look_for_move(row, col, color)  # player 2 move top left
 
-            if moves != []:
-                return [([row, col], moves)]
-        return []
+            if moves:
+                return move_lists
+                #return [([row, col], moves)]
+        #return []
 
     # this function will advance the current row and col by 1 at a given position (advance diagonally)
     # e.g. BOTTOMRIGHT: (1,2) => (2,3)
     def position_advance(self, given_row, given_col, direction):
         new_place = []
         # check the left side it can move to
-        if direction == BOTTOMLEFT and given_row + 1 < self.rows and given_col - 1 >= 0:
-            new_place.extend([given_row + 1, given_col - 1])  # bottom left
-        elif direction == BOTTOMRIGHT and given_row + 1 < self.rows and given_col + 1 < self.cols:
-            new_place.extend([given_row + 1, given_col + 1])  # bottom right
-        elif direction == TOPLEFT and given_row - 1 >= 0 and given_col - 1 >= 0:
-            new_place.extend([given_row - 1, given_col - 1])  # top left
-        elif direction == TOPRIGHT and given_row - 1 >= 0 and given_col + 1 < self.cols:
-            new_place.extend([given_row - 1, given_col + 1])  # top right
+        if direction == BOTTOMLEFT and given_row + 2 < self.rows and given_col - 2 >= 0:
+            new_place.extend([given_row + 2, given_col - 2])  # bottom left
+        elif direction == BOTTOMRIGHT and given_row + 2 < self.rows and given_col + 2 < self.cols:
+            new_place.extend([given_row + 2, given_col + 2])  # bottom right
+        elif direction == TOPLEFT and given_row - 2 >= 0 and given_col - 2 >= 0:
+            new_place.extend([given_row - 2, given_col - 2])  # top left
+        elif direction == TOPRIGHT and given_row - 2 >= 0 and given_col + 2 < self.cols:
+            new_place.extend([given_row - 2, given_col + 2])  # top right
 
         return new_place
 
@@ -191,7 +182,7 @@ class Board:
         valid_place = []
 
         if direction == TOPLEFT:
-            if not needEmpty and self.board[row - 1][col - 1].color != color:
+            if self.board[row - 1][col - 1] != 0 and self.board[row - 1][col - 1].color != color:
                 if row - 2 >= 0 and col - 2 >= 0:
                     if self.board[row - 2][col - 2] == 0:
                         capture_piece.extend([row, col])
@@ -203,7 +194,7 @@ class Board:
             else:
                 return []
         elif direction == TOPRIGHT:
-            if not needEmpty and self.board[row - 1][col + 1].color != color:
+            if self.board[row - 1][col + 1] != 0 and self.board[row - 1][col + 1].color != color:
                 if row - 2 >= 0 and col + 2 < self.cols:
                     if self.board[row - 2][col + 2] == 0:
                         capture_piece.extend([row, col])
@@ -215,7 +206,7 @@ class Board:
             else:
                 return []
         elif direction == BOTTOMRIGHT:
-            if not needEmpty and self.board[row + 1][col + 1].color != color:
+            if self.board[row + 1][col + 1] != 0 and self.board[row + 1][col + 1].color != color:
                 if row + 2 < self.rows and col + 2 < self.cols:
                     if self.board[row + 2][col + 2] == 0:
                         capture_piece.extend([row, col])
@@ -227,7 +218,7 @@ class Board:
             else:
                 return []
         elif direction == BOTTOMLEFT:
-            if not needEmpty and self.board[row + 1][col - 1].color != color:
+            if self.board[row + 1][col - 1] != 0 and self.board[row + 1][col - 1].color != color:
                 if row + 2 < self.rows and col - 2 >= 0:
                     if self.board[row + 2][col - 2] == 0:
                         capture_piece.extend([row, col])
@@ -294,43 +285,50 @@ class Board:
     # if there is no piece being captured, the second array is empty
     # move_list example: [[1,2],[2,3],[3,4]] , [[1,2],[2,3]],
     def _look_for_move(self, given_row, given_col, color, needEmpty=False):
-
+        consecutive_capture_positions = []
         start_position = (given_row, given_col)
         non_capturing_move_list = []
         capturing_move_list = []
+        captured_pieces = []
         non_capturing_move_list.append([start_position])
         capturing_move_list.append([start_position])
         for direction in DIRECTION_ARR:
             new_place = self.position_advance(given_row, given_col, direction)
-            row = new_place[0]
-            col = new_place[1]
-            temp_move_list = [start_position]
-            # check if there is empty piece or enemy piece in the way
-            # if the current position (new position after moving the piece to bottom left) is empty
-            #   return the position it's moving to
-            #   position as new position and empty capture_piece array
-
-            next_move = self.look_for_normal_move(row, col, direction)
-            if not next_move:
-                temp_move_list.append(tuple(next_move[0]))
-                non_capturing_move_list.append(temp_move_list)
-                del temp_move_list
-            # if the current position (new position after moving piece to bottom left) is not empty
-            #     check if there exists an enemy piece
-            #         if yes: check the position over this enemy piece, if it's within board
-            #             if yes: check if it's empty
-            #                 if yes: return that location as valid_place and
-            #                         return the enemy piece location as capture_piece
-            #
-            # TODO: consecutive capturing
-            else:
-                next_move = self.look_for_capture(given_row, given_col, color, direction)
-                if next_move[1]:
+            if new_place:
+                temp_move_list = [start_position]
+                temp_captured_piece = []
+                # check if there is empty piece or enemy piece in the way
+                # if the current position (new position after moving the piece to bottom left) is empty
+                #   return the position it's moving to
+                #   position as new position and empty capture_piece array
+                next_move = self.look_for_normal_move(given_row, given_col, direction)
+                if next_move:
                     temp_move_list.append(tuple(next_move[0]))
-                    capturing_move_list.append(temp_move_list)
-                    del temp_move_list
+                    non_capturing_move_list.append(temp_move_list)
+                # if the current position (new position after moving piece to bottom left) is not empty
+                #     check if there exists an enemy piece
+                #         if yes: check the position over this enemy piece, if it's within board
+                #             if yes: check if it's empty
+                #                 if yes: return that location as valid_place and
+                #                         return the enemy piece location as capture_piece
+                #
+                else:
+                    # if this is the first capturing move in the capture sequence
+                    #   if returns captured piece, then use that position as the new current position
+                    #   also put that move in the temp_move_list and put that captured piece into temp_captured_piece
+                    next_move = self.look_for_capture(given_row, given_col, color, direction)
 
-        move_lists = [non_capturing_move_list,capturing_move_list]
+                    if next_move and next_move[1]:
+                        temp_move_list.append(tuple(next_move[0]))
+                        capturing_move_list.append(temp_move_list)
+                        temp_captured_piece.append(tuple(next_move[1]))
+                        captured_pieces.append(temp_captured_piece)
+                        consecutive_capture_positions.append(tuple(next_move[0]))
+
+        move_lists = [non_capturing_move_list, capturing_move_list]
+
+        # print(move_lists)
+
         return move_lists
 
     # given a move (current posititon, list of pieces with moves, index of piece, index of move)
@@ -366,7 +364,6 @@ def main():
     board = Board()
     board.create_board()
     board.print_board()
-
     # red
     print("Player:", board.whose_turn())
     x = board.get_all_valid_moves()
