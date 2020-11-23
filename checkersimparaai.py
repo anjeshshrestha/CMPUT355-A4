@@ -1,4 +1,4 @@
-from game import Game
+from imparaai_checkers.game import ImparaaiGame
 from random import randint
 from time import sleep
 
@@ -79,7 +79,8 @@ def draw_board(current_game):
     #         if game.board.position_is_open(current_position):
     #             print("open position")
 
-# letting two people play with legal moves (legal random moves)
+# simulated play between two CPU players
+# current_game - the object on which the game is running on
 def simulated_play(current_game):
     # assume player 1 is black
     # assume player 2 is white
@@ -111,6 +112,7 @@ def simulated_play(current_game):
 
     print_winner(current_game)
     
+# checkers game between a person and a CPU
 def human_vs_cpu_play(current_game):
     # allow keyboard input
     # make some sort of cli interface
@@ -154,9 +156,15 @@ def human_vs_cpu_play(current_game):
     print("Final Iteration: " + str(len(current_game.moves) + 1))
     draw_board(current_game)
     print_winner(current_game)
-        
 
+def human_play_turn(current_game):
+    return
 
+# CPU actions for their turn
+# current_game  - the object on which the game is running on
+# game_strategy - CPUs have the option to employ several playing strategies
+# (Please note that due to the behaviour of the current Game library, 
+# it is not "truly" random as if a opportunity of capture exists, it prefers that)
 def cpu_play_turn(current_game, game_strategy = 'random'):
     # game_strategies: random, minimax. add and implement if necessary
     if game_strategy == "random":
@@ -168,6 +176,8 @@ def cpu_play_turn(current_game, game_strategy = 'random'):
     else:
         return
 
+# draw the current iteration details
+# such as move history, whose turn, and so on.
 def draw_iteration_details(current_game):
     print("----------------------------------")
     print()
@@ -216,7 +226,7 @@ def print_winner(current_game):
         print("No conclusive winner yet.")
     
 def main():
-    game = Game()
+    game = ImparaaiGame()
     #draw_board(game)
     human_vs_cpu_play(game)
 
