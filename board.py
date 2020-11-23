@@ -4,7 +4,7 @@ TOPLEFT = 0
 TOPRIGHT = 1
 BOTTOMLEFT = 2
 BOTTOMRIGHT = 3
-
+DIRECTION_ARR = [TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT]
 
 # assume player 1 is white
 # assume player 2 is red
@@ -183,6 +183,9 @@ class Board:
         return new_place
 
     # pass a direction and this function will look for capturing move towards that direction
+    # returns the position the piece is moving to as valid_place array
+    # and the position the enemy piece was captured at as capture_piece array
+    # returns empty array if no captuing move can be made
     def look_for_capture(self, row, col, color, direction, needEmpty=False):
         capture_piece = []
         valid_place = []
@@ -241,6 +244,8 @@ class Board:
 
     # this function will look for normal move given a certain direction
     # a normal move is a move where a piece moves without capturing any enemy
+    # returns the next position (valid_place array) and empty capture_piece array if there is a non-capturing move
+    # returns empty array if there is no legal non-capturing move
     def look_for_normal_move(self, row, col, direction):
         valid_place = []
         capture_piece = []
@@ -287,32 +292,46 @@ class Board:
     # after getting back where it can move, call get_valid_moves to recurse
     # returns an array of two arrays, the next valid place to move to and the piece that's being captured
     # if there is no piece being captured, the second array is empty
+    # move_list example: [[1,2],[2,3],[3,4]] , [[1,2],[2,3]],
+    def _look_for_move(self, given_row, given_col, color, needEmpty=False):
 
-    def _look_for_move(self, given_row, given_col, color, direction, needEmpty=False):
-        new_place = self.position_advance(given_row, given_col, direction)
-        row = new_place[0]
-        col = new_place[1]
+        start_position = (given_row, given_col)
+        non_capturing_move_list = []
+        capturing_move_list = []
+        non_capturing_move_list.append([start_position])
+        capturing_move_list.append([start_position])
+        for direction in DIRECTION_ARR:
+            new_place = self.position_advance(given_row, given_col, direction)
+            row = new_place[0]
+            col = new_place[1]
+            temp_move_list = [start_position]
+            # check if there is empty piece or enemy piece in the way
+            # if the current position (new position after moving the piece to bottom left) is empty
+            #   return the position it's moving to
+            #   position as new position and empty capture_piece array
 
-        # check if there is empty piece or enemy piece in the way
-        # if the current position (new position after moving the piece to bottom left) is empty
-        #   return the this
-        #   position as new position and empty capture_piece array
+            next_move = self.look_for_normal_move(row, col, direction)
+            if not next_move:
+                temp_move_list.append(tuple(next_move[0]))
+                non_capturing_move_list.append(temp_move_list)
+                del temp_move_list
+            # if the current position (new position after moving piece to bottom left) is not empty
+            #     check if there exists an enemy piece
+            #         if yes: check the position over this enemy piece, if it's within board
+            #             if yes: check if it's empty
+            #                 if yes: return that location as valid_place and
+            #                         return the enemy piece location as capture_piece
+            #
+            # TODO: consecutive capturing
+            else:
+                next_move = self.look_for_capture(given_row, given_col, color, direction)
+                if next_move[1]:
+                    temp_move_list.append(tuple(next_move[0]))
+                    capturing_move_list.append(temp_move_list)
+                    del temp_move_list
 
-        next_move = self.look_for_normal_move(row, col, direction)
-        if next_move != "[]":
-            return next_move
-
-        # if the current position (new position after moving piece to bottom left) is not empty
-        #     check if there exists an enemy piece
-        #         if yes: check the position over this enemy piece, if it's within board
-        #             if yes: check if it's empty
-        #                 if yes: return that location as valid_place and
-        #                         return the enemy piece location as capture_piece
-        #
-        else:
-            next_move = self.look_for_capture(given_row, given_col, color, direction)
-
-        return next_move
+        move_lists = [non_capturing_move_list,capturing_move_list]
+        return move_lists
 
     # given a move (current posititon, list of pieces with moves, index of piece, index of move)
     # will make the move, capture any piece in the way
