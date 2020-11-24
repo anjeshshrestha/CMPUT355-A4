@@ -1,6 +1,6 @@
 from .board import Board
 
-class Game:
+class ImparaaiGame:
 
 	def __init__(self):
 		self.board = Board()
