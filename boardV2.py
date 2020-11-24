@@ -129,11 +129,11 @@ class Board:
 
     def print_all_valid_moves(self):
         temp = self.get_all_valid_moves()
-
         for piece, moves in temp.items():
             print(piece, moves)
 
         return temp
+    
     #given a piece find position it can move to
     #find places it can move to - an right
     def get_valid_moves(self,piece):
@@ -141,21 +141,16 @@ class Board:
         list_of_places = []
         #check for emptty space
         if piece.king or self.player==1: # look moving down
-            if piece.row+1 < self.rows and piece.col+1 < self.cols:
-                list_of_places.append((piece.row+1,piece.col+1)) #right
-            if piece.row+1 < self.rows and piece.col-1 >= 0:
-                list_of_places.append((piece.row+1,piece.col-1)) #left
+            if piece.row+1 < self.rows and piece.col+1 < self.cols and self.board[piece.row+1][piece.col+1] == 0: #right
+                moves['non_capture'].append([(piece.row,piece.col),(piece.row+1,piece.col+1)])
+            if piece.row+1 < self.rows and piece.col-1 >= 0 and self.board[piece.row+1][piece.col-1] == 0:#left
+                moves['non_capture'].append([(piece.row,piece.col),(piece.row+1,piece.col-1)])
         if piece.king or self.player==2: # look moving up
-            if piece.row-1 >= 0 and piece.col+1 < self.cols:
-                list_of_places.append((piece.row-1,piece.col+1)) #right
-            if piece.row-1 >= 0 and piece.col-1 >= 0:
-                list_of_places.append((piece.row-1,piece.col-1)) #left
+            if piece.row-1 >= 0 and piece.col+1 < self.cols and self.board[piece.row-1][piece.col+1] == 0:#right
+                moves['non_capture'].append([(piece.row,piece.col),(piece.row-1,piece.col+1)])
+            if piece.row-1 >= 0 and piece.col-1 >= 0 and self.board[piece.row-1][piece.col-1] == 0: #left
+                moves['non_capture'].append([(piece.row,piece.col),(piece.row-1,piece.col-1)])
                 
-        for row,col in list_of_places:
-            temp_piece = self.board[row][col]
-            if temp_piece == 0:
-                moves['non_capture'].append((row,col))
-
         #check for capture pieces
         check_capture_list = [(piece.row,piece.col)]
         tempo_dict = {}
@@ -167,7 +162,9 @@ class Board:
                 if (row,col) not in tempo_dict:
                     tempo_dict[(row,col)] = []
                 tempo_dict[(row,col)].extend(new_check)
-        moves['capture'].append(tempo_dict)
+        x = self.dfs((piece.row,piece.col),[],tempo_dict,[])
+        if (piece.row,piece.col) not in x:
+            moves['capture'].extend(x[0])
         return moves
     
     def can_capture(self,piece,row,col):
@@ -188,25 +185,20 @@ class Board:
                     temp.append((row-2,col-2))#left
         return temp
 
-
-    def move(self,old_row,old_col,new_row,new_col):
-        piece = self.board[old_row][old_col]
-        #set old position to free
-        self.board[old_row][old_col] = 0
-        #move the piece in pieces
-        piece.move(new_row,new_col)
-        #set new location to current piece
-        self.board[new_row][new_col] = piece
-
-        #make it king if at end
-        if self.player == 1 and new_row == self.rows-1:
-            piece.make_king()
-        elif self.player == 2 and new_row == 0:
-            piece.make_king()
-        
-
-        #change turns
-        self.change_turn()
+    #return a sequence of moves for capture from a graph/tree
+    def dfs(self,node,visited,graph,path):
+        temp = []
+        if node not in visited:
+            if node not in graph or graph[node] == []:
+                visited.append(node)
+                path.append(node)
+                return path
+            else:
+                visited.append(node)
+                path.append(node)
+                for x in graph[node]:
+                    temp.append(self.dfs(x,visited,graph,path.copy()))
+        return temp
     
     #given a move (current posititon, list of pieces with moves, index of piece, index of move)
     #will make the move, capture any piece in the way
@@ -234,9 +226,38 @@ class Board:
             remove_piece.capture()
             self.board[mid_row][mid_col] = 0
             """
-        
-        
 
+    def make_moves(self, moves):
+        cur_row,cur_col = moves[0]
+        for new_row, new_col in moves[1:]:
+            print("Moving",self.playerColorShort[self.player], "From", (cur_row,cur_col), "to", (new_row,new_col))
+            #move the piece
+            self.move(cur_row,cur_col,new_row,new_col)
+            #condition check to see if there is piece in the way we have to capture
+            if abs(cur_row-new_row) >1 or abs(cur_col-new_col) > 1:
+                mid_row = (new_row+cur_row)//2
+                mid_col = (new_col+cur_col)//2
+                print("!!! Capturing", (mid_row,mid_col))
+                remove_piece = self.board[mid_row][mid_col]
+                remove_piece.capture()
+                self.board[mid_row][mid_col] = 0
+            cur_row,cur_col = new_row,new_col
+                
+    def get_best_move(self,moves):
+        best = 0
+        best_move = None
+        for piece, move in moves.items():
+            for sequence in move['capture']:
+                if len(sequence) > best:
+                    best = len(sequence)
+                    best_move = sequence
+        if best == 0:
+            for piece, move in moves.items():
+                for sequence in move['non_capture']:
+                    best_move = sequence
+                    break
+            
+        return best_move
 def main():
     board = Board()
     board.create_board()
@@ -290,16 +311,20 @@ def main():
     board.move(3,6,2,7)
     board.print_board()
     print()
-    
-#red
+
+    #red
     print("Player:",board.whose_turn())
     x = board.print_all_valid_moves()
     board.move(6,1,1,1)
     board.print_board()
     print()
-    #white
     
+    #white
     print("Player:",board.whose_turn())
     x = board.print_all_valid_moves()
+    y = board.get_best_move(x)
+    board.make_moves(y)
+    board.print_board()
+    print()
  
 main()
