@@ -117,13 +117,13 @@ class Board:
             for piece in self.player1Pieces:
                 if not piece.captured:
                     temp = self.get_valid_moves(piece)
-                    if temp != {'capture': [], 'non_capture': []}:
+                    if temp != []:
                         all_moves[(piece.row, piece.col)] = temp
         else:
             for piece in self.player2Pieces:
                 if not piece.captured:
                     temp = self.get_valid_moves(piece)
-                    if temp != {'capture': [], 'non_capture': []}:
+                    if temp != []:
                         all_moves[(piece.row, piece.col)] = temp
         return all_moves
 
@@ -137,19 +137,19 @@ class Board:
     #given a piece find position it can move to
     #find places it can move to - an right
     def get_valid_moves(self,piece):
-        moves = {'capture':[],'non_capture': []}
+        moves = []
         list_of_places = []
         #check for emptty space
         if piece.king or self.player==1: # look moving down
             if piece.row+1 < self.rows and piece.col+1 < self.cols and self.board[piece.row+1][piece.col+1] == 0: #right
-                moves['non_capture'].append([(piece.row,piece.col),(piece.row+1,piece.col+1)])
+                moves.append([(piece.row,piece.col),(piece.row+1,piece.col+1)])
             if piece.row+1 < self.rows and piece.col-1 >= 0 and self.board[piece.row+1][piece.col-1] == 0:#left
-                moves['non_capture'].append([(piece.row,piece.col),(piece.row+1,piece.col-1)])
+                moves.append([(piece.row,piece.col),(piece.row+1,piece.col-1)])
         if piece.king or self.player==2: # look moving up
             if piece.row-1 >= 0 and piece.col+1 < self.cols and self.board[piece.row-1][piece.col+1] == 0:#right
-                moves['non_capture'].append([(piece.row,piece.col),(piece.row-1,piece.col+1)])
+                moves.append([(piece.row,piece.col),(piece.row-1,piece.col+1)])
             if piece.row-1 >= 0 and piece.col-1 >= 0 and self.board[piece.row-1][piece.col-1] == 0: #left
-                moves['non_capture'].append([(piece.row,piece.col),(piece.row-1,piece.col-1)])
+                moves.append([(piece.row,piece.col),(piece.row-1,piece.col-1)])
                 
         #check for capture pieces
         check_capture_list = [(piece.row,piece.col)]
@@ -163,9 +163,20 @@ class Board:
                     tempo_dict[(row,col)] = []
                 tempo_dict[(row,col)].extend(new_check)
         x = self.dfs((piece.row,piece.col),[],tempo_dict,[])
+
+        ###need to un-nest the x and append to moves
+        #
         if (piece.row,piece.col) not in x:
-            moves['capture'].extend(x[0])
+            for y in x:
+                moves.append(self.get_unNested(y))
+        #if (piece.row,piece.col) not in x:
+            #moves.append(x)
         return moves
+    def get_unNested(self,alist):
+        if len(alist) == 1:
+            return self.get_unNested(alist[0])
+        else:
+            return alist
     
     def can_capture(self,piece,row,col):
         temp = []
@@ -200,33 +211,6 @@ class Board:
                     temp.append(self.dfs(x,visited,graph,path.copy()))
         return temp
     
-    #given a move (current posititon, list of pieces with moves, index of piece, index of move)
-    #will make the move, capture any piece in the way
-    # given example:
-    #                   cur       new
-    # {'non_capture': [[(6, 5), (5, 6)]], 'capture': []}
-    def make_non_capture_move(self, moves, index_move):
-        moves = moves['non_capture']
-        #get current piece location and move location
-        selected_move = moves[index_move]
-        cur_row,cur_col = selected_move[0]
-        new_row,new_col = selected_move[1]
-
-        print("Moving",self.playerColorShort[self.player], "From", (cur_row,cur_col), "to", (new_row,new_col))
-        #move the piece
-        self.move(cur_row,cur_col,new_row,new_col)
-        """
-
-        #condition check to see if there is piece in the way we have to capture
-        if abs(row-new_row) >1 or abs(col-new_col) > 1:
-            mid_row = (new_row+row)//2
-            mid_col = (new_col+col)//2
-            print("!!! Capturing", (mid_row,mid_col))
-            remove_piece = self.board[mid_row][mid_col]
-            remove_piece.capture()
-            self.board[mid_row][mid_col] = 0
-            """
-
     def make_moves(self, moves):
         cur_row,cur_col = moves[0]
         for new_row, new_col in moves[1:]:
@@ -244,25 +228,51 @@ class Board:
             cur_row,cur_col = new_row,new_col
                 
     def get_best_move(self,moves):
-        best = 0
+        best = -1
         best_move = None
         for piece, move in moves.items():
-            for sequence in move['capture']:
+            for sequence in move:
                 if len(sequence) > best:
                     best = len(sequence)
                     best_move = sequence
-        if best == 0:
-            for piece, move in moves.items():
-                for sequence in move['non_capture']:
-                    best_move = sequence
-                    break
-            
         return best_move
+    
 def main():
     board = Board()
     board.create_board()
-    board.print_board()
     
+
+    while not board.has_winner():
+        board.print_board()
+        print("Player:",board.whose_turn())
+        x_temp = board.print_all_valid_moves()
+        print("Get best move: 1")
+        print("Make move: 2")
+        x = int(input())
+        if x == 1:
+            print(board.get_best_move(x_temp))
+            print("Make best move: 1")
+            print("Make move: 2")
+            x = int(input())
+            if x == 1:
+                board.make_moves(board.get_best_move(x_temp))
+            else:
+                continue
+        if x == 2:
+            y = int(input("piece to move, positon row: "))
+            z = int(input("piece to move, positon col: "))
+            if (y,z) not in x_temp:
+                continue
+            
+            print(x_temp[(y,z)])
+            zz = int(input("sequence to make: "))
+            if zz >= len(x_temp[(y,z)]):
+                continue
+            print(x_temp[(y,z)][zz])
+            board.make_moves(x_temp[(y,z)][zz])
+        print("---------------------------------------")
+
+    """
     #white
     print("Player:",board.whose_turn())
     x = board.print_all_valid_moves()
@@ -326,5 +336,7 @@ def main():
     board.make_moves(y)
     board.print_board()
     print()
+
+    """
  
 main()
