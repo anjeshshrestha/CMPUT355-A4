@@ -113,19 +113,27 @@ class Board:
     #return list
     def get_all_valid_moves(self):
         all_moves = {}
+        all_capture_moves = {}
         if self.player == 1:
             for piece in self.player1Pieces:
                 if not piece.captured:
-                    temp = self.get_valid_moves(piece)
-                    if temp != []:
+                    capture, temp = self.get_valid_moves(piece)
+                    if capture:
+                        all_capture_moves[(piece.row, piece.col)] = temp
+                    elif temp != []:
                         all_moves[(piece.row, piece.col)] = temp
         else:
             for piece in self.player2Pieces:
                 if not piece.captured:
-                    temp = self.get_valid_moves(piece)
+                    capture, temp = self.get_valid_moves(piece)
+                    if capture:
+                        all_capture_moves[(piece.row, piece.col)] = temp
                     if temp != []:
                         all_moves[(piece.row, piece.col)] = temp
-        return all_moves
+        if all_capture_moves != {}:
+            return all_capture_moves
+        else:
+            return all_moves
 
     def print_all_valid_moves(self):
         temp = self.get_all_valid_moves()
@@ -165,13 +173,14 @@ class Board:
         x = self.dfs((piece.row,piece.col),[],tempo_dict,[])
 
         ###need to un-nest the x and append to moves
-        #
+        temp_moves = []
         if (piece.row,piece.col) not in x:
             for y in x:
-                moves.append(self.get_unNested(y))
-        #if (piece.row,piece.col) not in x:
-            #moves.append(x)
-        return moves
+                temp_moves.append(self.get_unNested(y))
+        if temp_moves != []:
+            return (True, temp_moves)
+        else:
+            return (False, moves)
     def get_unNested(self,alist):
         if len(alist) == 1:
             return self.get_unNested(alist[0])
