@@ -14,7 +14,9 @@ class Board:
         self.playerColorKing = [".","W", "R"]
 
         self.player1Pieces = []
+        self.player1PiecesCount = 0
         self.player2Pieces = []
+        self.player2PiecesCount = 0
 
     
     def get_piece(self, row, col):
@@ -29,16 +31,17 @@ class Board:
                         temp_piece = Piece(row, col, self.playerColor[1], self.playerColorShort[1], self.playerColorKing[1])
                         self.board[row].append(temp_piece)
                         self.player1Pieces.append(temp_piece)
+                        self.player1PiecesCount += 1
                     elif row > 4: #bottom half - player 2
                         temp_piece = Piece(row, col, self.playerColor[2], self.playerColorShort[2], self.playerColorKing[2])
                         self.board[row].append(temp_piece)
                         self.player2Pieces.append(temp_piece)
+                        self.player2PiecesCount += 1
                     else:
                         self.board[row].append(0)
                    
                 else:
                     self.board[row].append(0)
-
     #print board with padding of nubers
     def print_board(self):
         print("   0 1 2 3 4 5 6 7")
@@ -99,13 +102,13 @@ class Board:
 
     #check to see if there is a winner
     def has_winner(self):
-        return len(self.player2Pieces) == 0 or len(self.player2Pieces) == 0
+        return self.player1PiecesCount == 0 or self.player2PiecesCount == 0
     
     #if there is no more pieces left return who won
     def get_winner(self):
-        if len(self.player2Pieces) == 0:
+        if self.player1PiecesCount == 0:
             return "Player 1 is Winner"
-        elif len(self.player2Pieces) == 0:
+        elif self.player2PiecesCount == 0:
             return "Player 2 is Winner"
 
     #itterate over all pieces of player that is not captured
@@ -139,7 +142,6 @@ class Board:
         temp = self.get_all_valid_moves()
         for piece, moves in temp.items():
             print(piece, moves)
-
         return temp
     
     #given a piece find position it can move to
@@ -234,6 +236,10 @@ class Board:
                 remove_piece = self.board[mid_row][mid_col]
                 remove_piece.capture()
                 self.board[mid_row][mid_col] = 0
+                if self.player == 1:
+                    self.player2PiecesCount -= 1
+                elif self.player == 2:
+                    self.player1PiecesCount -= 1
             cur_row,cur_col = new_row,new_col
                 
     def get_best_move(self,moves):
@@ -249,8 +255,6 @@ class Board:
 def main():
     board = Board()
     board.create_board()
-    
-
     while not board.has_winner():
         board.print_board()
         print("Player:",board.whose_turn())
@@ -258,6 +262,9 @@ def main():
         print("Get best move: 1")
         print("Make move: 2")
         x = int(input())
+        if x_temp == {}:
+            print("Stalemate")
+            break
         if x == 1:
             print(board.get_best_move(x_temp))
             print("Make best move: 1")
@@ -280,72 +287,5 @@ def main():
             print(x_temp[(y,z)][zz])
             board.make_moves(x_temp[(y,z)][zz])
         print("---------------------------------------")
-
-    """
-    #white
-    print("Player:",board.whose_turn())
-    x = board.print_all_valid_moves()
-    board.move(2,1,3,2)
-    board.print_board()
-    print()
-
-    #red
-    print("Player:",board.whose_turn())
-    x = board.print_all_valid_moves()
-    board.move(5,4,4,3)
-    board.print_board()
-    print()
-
-    #white
-    print("Player:",board.whose_turn())
-    x = board.print_all_valid_moves()
-    board.move(3,2,2,1)
-    board.print_board()
-    print()
-
-    #red
-    print("Player:",board.whose_turn())
-    x = board.print_all_valid_moves()
-    board.move(4,3,3,2)
-    board.print_board()
-    print()
-
-    #white
-    print("Player:",board.whose_turn())
-    x = board.print_all_valid_moves()
-    board.move(2,7,3,6)
-    board.print_board()
-    print()
-
-    #red
-    print("Player:",board.whose_turn())
-    x = board.print_all_valid_moves()
-    board.move(6,5,5,4)
-    board.print_board()
-    print()
-
-    #white
-    print("Player:",board.whose_turn())
-    x = board.print_all_valid_moves()
-    board.move(3,6,2,7)
-    board.print_board()
-    print()
-
-    #red
-    print("Player:",board.whose_turn())
-    x = board.print_all_valid_moves()
-    board.move(6,1,1,1)
-    board.print_board()
-    print()
-    
-    #white
-    print("Player:",board.whose_turn())
-    x = board.print_all_valid_moves()
-    y = board.get_best_move(x)
-    board.make_moves(y)
-    board.print_board()
-    print()
-
-    """
- 
+    print(board.get_winner())
 main()
