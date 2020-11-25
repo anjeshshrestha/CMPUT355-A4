@@ -17,11 +17,13 @@ class Board:
         self.player1PiecesCount = 0
         self.player2Pieces = []
         self.player2PiecesCount = 0
+        self.create_board()
 
     
     def get_piece(self, row, col):
         return self.board[row][col]
-
+    
+    #creates the starting of board
     def create_board(self):
         for row in range(self.rows):
             self.board.append([])
@@ -113,6 +115,7 @@ class Board:
 
     #itterate over all pieces of player that is not captured
     #find moves it can make and save it a list
+    #if a piece can capture, only return moves of pieces that can capture
     #return list
     def get_all_valid_moves(self):
         all_moves = {}
@@ -137,7 +140,7 @@ class Board:
             return all_capture_moves
         else:
             return all_moves
-
+    #print all moves a piece can make
     def print_all_valid_moves(self):
         temp = self.get_all_valid_moves()
         for piece, moves in temp.items():
@@ -145,7 +148,8 @@ class Board:
         return temp
     
     #given a piece find position it can move to
-    #find places it can move to - an right
+    #find places it can move to
+    #if it can capture, return capture move only
     def get_valid_moves(self,piece):
         moves = []
         list_of_places = []
@@ -183,12 +187,13 @@ class Board:
             return (True, temp_moves)
         else:
             return (False, moves)
+    #unnest a nested list [[1,2,3]] -> [1,2,3]
     def get_unNested(self,alist):
         if len(alist) == 1:
             return self.get_unNested(alist[0])
         else:
             return alist
-    
+    #checks if it can capture a piece next to it and jump to a empty spot
     def can_capture(self,piece,row,col):
         temp = []
         if piece.king or self.player==1: # look moving down
@@ -221,7 +226,7 @@ class Board:
                 for x in graph[node]:
                     temp.append(self.dfs(x,visited,graph,path.copy()))
         return temp
-    
+    #handles sequence of moves and capturing 
     def make_moves(self, moves):
         cur_row,cur_col = moves[0]
         for new_row, new_col in moves[1:]:
@@ -241,7 +246,8 @@ class Board:
                 elif self.player == 2:
                     self.player1PiecesCount -= 1
             cur_row,cur_col = new_row,new_col
-                
+
+    #make move with most captures or first found
     def get_best_move(self,moves):
         best = -1
         best_move = None
@@ -254,7 +260,7 @@ class Board:
     
 def main():
     board = Board()
-    board.create_board()
+    
     while not board.has_winner():
         board.print_board()
         print("Player:",board.whose_turn())
