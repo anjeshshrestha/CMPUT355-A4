@@ -1,4 +1,3 @@
-from sys import flags
 from piece import Piece
 # assume player 1 is white
 # assume player 2 is red
@@ -315,4 +314,4 @@ def main():
         print("---------------------------------------")
     print(board.get_winner())
     """
-    main()
+main()
