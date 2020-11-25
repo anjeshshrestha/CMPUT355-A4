@@ -15,14 +15,16 @@ class Board:
         self.playerColorKing = [".","W", "R"]
 
         self.player1Pieces = []
-        self.player1PieceCount = 12
+        self.player1PiecesCount = 0
         self.player2Pieces = []
-        self.player2PieceCount = 12
+        self.player2PiecesCount = 0
         self.create_board()
-    
+
+    #returns a piece on the board
     def get_piece(self, row, col):
         return self.board[row][col]
-
+    
+    #creates the starting of board
     def create_board(self):
         for row in range(self.rows):
             self.board.append([])
@@ -32,16 +34,17 @@ class Board:
                         temp_piece = Piece(row, col, self.playerColor[1], self.playerColorShort[1], self.playerColorKing[1])
                         self.board[row].append(temp_piece)
                         self.player1Pieces.append(temp_piece)
+                        self.player1PiecesCount += 1
                     elif row > 4: #bottom half - player 2
                         temp_piece = Piece(row, col, self.playerColor[2], self.playerColorShort[2], self.playerColorKing[2])
                         self.board[row].append(temp_piece)
                         self.player2Pieces.append(temp_piece)
+                        self.player2PiecesCount += 1
                     else:
                         self.board[row].append(0)
                    
                 else:
                     self.board[row].append(0)
-    
     #print board with padding of nubers
     def print_board(self):
         print("   0 1 2 3 4 5 6 7")
@@ -57,71 +60,29 @@ class Board:
                     print(self.board[row][col].colorShort, end=" ")
             print("")
         print()
-
-
-    #check who's turn it is to play
-    def whose_turn(self):
-        return self.player
-
-    #check to see if there is a winner
-    def has_winner(self):
-        return self.player1PieceCount == 0 or self.player2PieceCount == 0
-    
-    #if there is no more pieces left return who won
-    def get_winner(self):
-        if self.player2PieceCount == 0:
-            return "Player 1 is Winner"
-        elif self.player1PieceCount == 0:
-            return "Player 2 is Winner"
-        
-    #given a move (current posititon, list of pieces with moves, index of piece, index of move)
-    #will make the move, capture any piece in the way
-    # given example:
-    #        curPOS   newPOS   no-capture
-    # WHITE: (3, 0) : {(4, 1): []}
-    #        curPOS    newPOS     capture     newPOS     capture    catpure       newPOS  no-capture
-    # WHITE: (2, 5) : {(4, 3): [RED: (3, 4)], (6, 1): [RED: (5, 2), RED: (3, 4)], (3, 6): []}
-    def make_move(self, moves, piece, index_move):
-        moves = moves[piece]
-        new_place = list(moves.keys())[index_move]
-        captures = moves[new_place]
-        print(piece, "," ,new_place, "," ,captures)
-        self.move(piece, new_place, captures)
         
     #move a piece from before to after
-    def move(self,piece, new_place, captures):
-        row,col = new_place
-        #set old position to free
-        self.board[piece.row][piece.col] = 0
+    def move(self,row,col, new_row,new_col):
+        piece = self.board[row][col]
         #move the piece in pieces
-        piece.move(row,col)
+        piece.move(new_row,new_col)
         #set new location to current piece
-        self.board[row][col] = piece
-
-        #capture pieces
-        self.capture(captures)
+        self.board[new_row][new_col] = piece
+        #set old position to free
+        self.board[row][col] = 0
 
         #make it king if at end
-        if self.player == 1 and row == self.rows-1:
+        if self.player == 1 and new_row == self.rows-1:
             piece.make_king()
-        elif self.player == 2 and row == 0:
+        elif self.player == 2 and new_row == 0:
             piece.make_king()
-        
+
         #record the move
-        self.moves.append([(piece.row,piece.col),new_place, captures])
+        self.moves.append([(row,col),(new_row,new_col)])
 
         #change turns
         self.change_turn()
-    def capture(self,captures):
-        for piece in captures:
-            self.board[piece.row][piece.col] = 0
-            piece.capture()
-            print("Captured", piece)
-            if self.player == 1:
-                self.player2PieceCount -= 1
-            elif self.player == 2:
-                self.player1PieceCount -= 1
-            
+
     #change turn of play, should be called from move
     def change_turn(self):
         if self.player == 1:
@@ -129,142 +90,229 @@ class Board:
         else:
             self.player = 1
 
-    def print_all_valid_moves(self):
-        temp = self.get_all_valid_moves()
-        count = 0
-        for piece, moves in temp.items():
-            print(count, " : ", piece,":",moves)
-            count += 1
-        return temp
+    #return if speicied position is valid
+    # no longer need i think
+    def valid_position(self, row, col):
+        return (row >= 0 and row < self.rows) and (col >= 0 and col < self.cols)
+
+    #check who's turn it is to play
+    def whose_turn(self):
+        return self.player
+
+    #check to see if there is a winner
+    def has_winner(self):
+        return self.player1PiecesCount == 0 or self.player2PiecesCount == 0
     
+    #if there is no more pieces left return who won
+    def get_winner(self):
+        if self.player1PiecesCount == 0:
+            return "Player 1 is Winner"
+        elif self.player2PiecesCount == 0:
+            return "Player 2 is Winner"
+
     #itterate over all pieces of player that is not captured
     #find moves it can make and save it a list
-    #return list
+    #if a piece can capture, only return moves of pieces that can capture
+    #return dictionary
+    # { (x,y) : [[(x,y),(a,b)],[(x,y),(g,d),(f,h)]]
+    #   ....
+    # }
     def get_all_valid_moves(self):
         all_moves = {}
+        all_capture_moves = {}
         if self.player == 1:
             for piece in self.player1Pieces:
                 if not piece.captured:
-                    temp = self.get_valid_moves(piece)
-                    if temp != {}:
-                        all_moves[piece] = temp
+                    capture, temp = self.get_valid_moves(piece)
+                    if capture:
+                        all_capture_moves[(piece.row, piece.col)] = temp
+                    elif temp != []:
+                        all_moves[(piece.row, piece.col)] = temp
         else:
             for piece in self.player2Pieces:
                 if not piece.captured:
-                    temp = self.get_valid_moves(piece)
-                    if temp != {}:
-                        all_moves[piece] = temp
-        return all_moves
-
+                    capture, temp = self.get_valid_moves(piece)
+                    if capture:
+                        all_capture_moves[(piece.row, piece.col)] = temp
+                    if temp != []:
+                        all_moves[(piece.row, piece.col)] = temp
+        if all_capture_moves != {}:
+            return all_capture_moves
+        else:
+            return all_moves
+        
+    #print all moves a piece can make
+    def print_all_valid_moves(self):
+        temp = self.get_all_valid_moves()
+        for piece, moves in temp.items():
+            print(piece, moves)
+        return temp
+    
     #given a piece find position it can move to
-    #find places it can move to - an right
-    # https://github.com/techwithtim/Python-Checkers/blob/master/checkers/board.py
-    # after spending too much time, trying to implement own method to multiple capture
-    # using algoritm from above to find valid move and captures
+    #find places it can move to
+    #if it can capture, return capture move only
     def get_valid_moves(self,piece):
-        moves = {}
-        left = piece.col - 1
-        right = piece.col + 1
-        row = piece.row
-        if piece.color == "RED" or piece.king:
-            moves.update(self._traverse_left(row -1, max(row-3, -1), -1, piece.color, left))
-            moves.update(self._traverse_right(row -1, max(row-3, -1), -1, piece.color, right))
-        if piece.color == "WHITE" or piece.king:
-            moves.update(self._traverse_left(row +1, min(row+3, self.rows), 1, piece.color, left))
-            moves.update(self._traverse_right(row +1, min(row+3, self.rows), 1, piece.color, right))
-    
-        return moves
-
-    def _traverse_left(self, start_row, stop_row, direction, color, left_col, skipped=[]):
-        moves = {}
-        last = []
-        for cur_row in range(start_row, stop_row, direction):
-            if left_col < 0:
-                break
-            
-            current = self.board[cur_row][left_col]
-            if current == 0:
-                if skipped and not last:
-                    break
-                elif skipped:
-                    moves[(cur_row, left_col)] = last + skipped
-                else:
-                    moves[(cur_row, left_col)] = last
+        moves = []
+        list_of_places = []
+        #check for emptty space
+        if piece.king or self.player==1: # look moving down
+            if piece.row+1 < self.rows and piece.col+1 < self.cols and self.board[piece.row+1][piece.col+1] == 0: #right
+                moves.append([(piece.row,piece.col),(piece.row+1,piece.col+1)])
+            if piece.row+1 < self.rows and piece.col-1 >= 0 and self.board[piece.row+1][piece.col-1] == 0:#left
+                moves.append([(piece.row,piece.col),(piece.row+1,piece.col-1)])
+        if piece.king or self.player==2: # look moving up
+            if piece.row-1 >= 0 and piece.col+1 < self.cols and self.board[piece.row-1][piece.col+1] == 0:#right
+                moves.append([(piece.row,piece.col),(piece.row-1,piece.col+1)])
+            if piece.row-1 >= 0 and piece.col-1 >= 0 and self.board[piece.row-1][piece.col-1] == 0: #left
+                moves.append([(piece.row,piece.col),(piece.row-1,piece.col-1)])
                 
-                if last:
-                    if direction == -1:
-                        row = max(cur_row-3, 0)
-                    else:
-                        row = min(cur_row+3, self.rows)
-                    moves.update(self._traverse_left(cur_row+direction, row, direction, color, left_col-1,skipped=last))
-                    moves.update(self._traverse_right(cur_row+direction, row, direction, color, left_col+1,skipped=last))
-                break
-            elif current.color == color:
-                break
-            else:
-                last = [current]
+        #check for capture pieces
+        check_capture_list = [(piece.row,piece.col)]
+        tempo_dict = {}
+        while len(check_capture_list) !=0:
+            row,col = check_capture_list.pop()
+            new_check = self.can_capture(piece,row,col)
+            check_capture_list.extend(new_check)
+            if new_check:
+                if (row,col) not in tempo_dict:
+                    tempo_dict[(row,col)] = []
+                tempo_dict[(row,col)].extend(new_check)
+        x = self.dfs((piece.row,piece.col),[],tempo_dict,[])
 
-            left_col -= 1
+        ### un-nest the x
+        temp_moves = []
+        if (piece.row,piece.col) not in x:
+            for y in x:
+                temp_moves.append(self.get_unNested(y))
+        if temp_moves != []:
+            return (True, temp_moves)
+        else:
+            return (False, moves)
         
-        return moves
-   
-
-    def _traverse_right(self, start_row, stop_row, direction, color, right_col, skipped=[]):
-        moves = {}
-        last = []
-        for cur_row in range(start_row, stop_row, direction):
-            if right_col >= self.cols:
-                break
-            
-            current = self.board[cur_row][right_col]
-            if current == 0:
-                if skipped and not last:
-                    break
-                elif skipped:
-                    moves[(cur_row,right_col)] = last + skipped
-                else:
-                    moves[(cur_row, right_col)] = last
-                
-                if last:
-                    if direction == -1:
-                        row = max(cur_row-3, 0)
-                    else:
-                        row = min(cur_row+3, self.rows)
-                    moves.update(self._traverse_left(cur_row+direction, row, direction, color, right_col-1,skipped=last))
-                    moves.update(self._traverse_right(cur_row+direction, row, direction, color, right_col+1,skipped=last))
-                break
-            elif current.color == color:
-                break
-            else:
-                last = [current]
-
-            right_col += 1
+    #unnest a nested list [[1,2,3]] -> [1,2,3]
+    def get_unNested(self,alist):
+        if len(alist) == 1:
+            return self.get_unNested(alist[0])
+        else:
+            return alist
         
-        return moves
+    #checks if it can capture a piece next to it and jump to a empty spot
+    def can_capture(self,piece,row,col):
+        temp = []
+        if piece.king or self.player==1: # look moving down
+            if row+1 < self.rows and col+1 < self.cols:
+                if self.board[row+1][col+1] != 0 and self.board[row+1][col+1].color != piece.color and self.valid_position(row+2,col+2) and self.board[row+2][col+2] == 0:
+                    temp.append((row+2,col+2)) #right
+            if row+1 < self.rows and col-1 >= 0:
+                if self.board[row+1][col-1] != 0 and self.board[row+1][col-1].color != piece.color and self.valid_position(row+2,col-2) and self.board[row+2][col-2] == 0:
+                    temp.append((row+2,col-2))#left
+        if piece.king or self.player==2: # look moving up
+            if row-1 >= 0 and col+1 < self.cols:
+                if self.board[row-1][col+1] != 0 and self.board[row-1][col+1].color != piece.color and self.valid_position(row-2,col+2) and self.board[row-2][col+2] == 0:
+                    temp.append((row-2,col+2))#right
+            if row-1 >= 0 and col-1 >= 0:
+                if self.board[row-1][col-1] != 0 and self.board[row-1][col-1].color != piece.color and self.valid_position(row-2,col-2) and self.board[row-2][col-2] == 0:
+                    temp.append((row-2,col-2))#left
+        return temp
+
+    #return a sequence of moves for capture from a graph/tree
+    def dfs(self,node,visited,graph,path):
+        temp = []
+        if node not in visited:
+            if node not in graph or graph[node] == []:
+                visited.append(node)
+                path.append(node)
+                return path
+            else:
+                visited.append(node)
+                path.append(node)
+                for x in graph[node]:
+                    temp.append(self.dfs(x,visited,graph,path.copy()))
+        return temp
     
+    #handles sequence of moves and capturing 
+    def make_moves(self, moves):
+        cur_row,cur_col = moves[0]
+        for new_row, new_col in moves[1:]:
+            print("Moving",self.playerColorShort[self.player], "From", (cur_row,cur_col), "to", (new_row,new_col))
+            #move the piece
+            self.move(cur_row,cur_col,new_row,new_col)
+            #condition check to see if there is piece in the way we have to capture
+            if abs(cur_row-new_row) >1 or abs(cur_col-new_col) > 1:
+                mid_row = (new_row+cur_row)//2
+                mid_col = (new_col+cur_col)//2
+                print("!!! Capturing", (mid_row,mid_col))
+                remove_piece = self.board[mid_row][mid_col]
+                remove_piece.capture()
+                self.board[mid_row][mid_col] = 0
+                if self.player == 1:
+                    self.player2PiecesCount -= 1
+                elif self.player == 2:
+                    self.player1PiecesCount -= 1
+            cur_row,cur_col = new_row,new_col
 
+    #make move with most captures or first found
+    def get_best_move(self,moves):
+        best = -1
+        best_move = None
+        for piece, move in moves.items():
+            for sequence in move:
+                if len(sequence) > best:
+                    best = len(sequence)
+                    best_move = sequence
+        return best_move
 
 def main():
     board = Board()
+    #prints the board
     board.print_board()
+    #gets all moves
+    # { (x,y) : [[(x,y),(a,b)],[(x,y),(g,d),(f,h)]]
+    # ...
+    # }
+    
+    x_temp = board.get_all_valid_moves()
+    #print all moves
+    board.print_all_valid_moves()
+    #print(x_temp)  #uncomment this to see what the valid moves return
+    #basically selects a move
+    selected_move = board.get_best_move(x_temp)
+    #passes the selected move to move the piece
+    board.make_moves(selected_move)
 
+    """
     while not board.has_winner():
-        #white
+        board.print_board()
         print("Player:",board.whose_turn())
         x_temp = board.print_all_valid_moves()
-        while True:
-            abc = int(input("piece index: "))
-            if abc < len(x_temp):
-                break
-        y_piece = list(x_temp.keys())[abc]
-        while True:
-            cdf = int(input("piece move: "))
-            if cdf < len(list(x_temp[y_piece].keys())):
-                break
-        board.make_move(x_temp,y_piece, cdf)
-        board.print_board()
-    
-# Invoke main() if called via `python3 board.py`
-# but not if `python3 -i board.py` or `from board import *`
-if __name__ == '__main__' and not flags.interactive:
+        print("Get best move: 1")
+        print("Make move: 2")
+        x = int(input())
+        if x_temp == {}:
+            print("Stalemate")
+            break
+        if x == 1:
+            print(board.get_best_move(x_temp))
+            print("Make best move: 1")
+            print("Make move: 2")
+            x = int(input())
+            if x == 1:
+                board.make_moves(board.get_best_move(x_temp))
+            else:
+                continue
+        if x == 2:
+            y = int(input("piece to move, positon row: "))
+            z = int(input("piece to move, positon col: "))
+            if (y,z) not in x_temp:
+                continue
+            
+            print(x_temp[(y,z)])
+            zz = int(input("sequence to make: "))
+            if zz >= len(x_temp[(y,z)]):
+                continue
+            print(x_temp[(y,z)][zz])
+            board.make_moves(x_temp[(y,z)][zz])
+        print("---------------------------------------")
+    print(board.get_winner())
+    """
     main()
