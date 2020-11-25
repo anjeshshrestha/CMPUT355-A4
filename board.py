@@ -4,7 +4,10 @@ TOPLEFT = 0
 TOPRIGHT = 1
 BOTTOMLEFT = 2
 BOTTOMRIGHT = 3
-DIRECTION_ARR = [TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT]
+ALL_DIRECTION_ARR = [TOPLEFT, TOPRIGHT, BOTTOMLEFT, BOTTOMRIGHT]
+UP_DIRECTION_ARR = [TOPLEFT, TOPRIGHT]
+DOWN_DIRECTION_ARR = [BOTTOMLEFT, BOTTOMRIGHT]
+
 
 # assume player 1 is white
 # assume player 2 is red
@@ -145,15 +148,13 @@ class Board:
 
             new_positions = []
             captured = True
-            first_move = True
-            while captured:
-                if self.player == 1 or piece.king:
-                    move_lists = self._look_for_move(row, col, color)  # player 1 move bottom right
-                if self.player == 2 or piece.king:
-                    move_lists = self._look_for_move(row, col, color)  # player 2 move top left
+            move_lists = self._look_for_move(row, col, color)
+            # if self.player == 1 or piece.king:
+            #     move_lists = self._look_for_move(row, col, color)  # player 1 move bottom right
+            # if self.player == 2 or piece.king:
+            #     move_lists = self._look_for_move(row, col, color)  # player 2 move top left
 
-            if moves:
-                return move_lists
+        return move_lists
                 #return [([row, col], moves)]
         #return []
 
@@ -258,6 +259,7 @@ class Board:
             else:
                 return []
         elif direction == BOTTOMRIGHT:
+
             if self.board[row + 1][col + 1] == 0:
                 valid_place.extend([row + 1, col + 1])
                 next_move = [valid_place, capture_piece]
@@ -266,6 +268,7 @@ class Board:
             else:
                 return []
         elif direction == BOTTOMLEFT:
+            print("bottom left cell", self.board[row + 1][col - 1])
             if self.board[row + 1][col - 1] == 0:
                 valid_place.extend([row + 1, col - 1])
                 next_move = [valid_place, capture_piece]
@@ -292,7 +295,18 @@ class Board:
         captured_pieces = []
         non_capturing_move_list.append([start_position])
         capturing_move_list.append([start_position])
-        for direction in DIRECTION_ARR:
+        search_direction_arr = []
+        if color == "r":
+            search_direction_arr = UP_DIRECTION_ARR
+        elif color == "w":
+            search_direction_arr = DOWN_DIRECTION_ARR
+        elif color == "R" or color == "W":
+            search_direction_arr = ALL_DIRECTION_ARR
+
+        for direction in search_direction_arr:
+            print("color", color)
+            print("direction:", direction)
+
             new_place = self.position_advance(given_row, given_col, direction)
             if new_place:
                 temp_move_list = [start_position]
@@ -364,6 +378,10 @@ def main():
     board = Board()
     board.create_board()
     board.print_board()
+    move_lists = board.get_valid_moves(2, 1, "w")
+    print(move_lists)
+    exit()
+
     # red
     print("Player:", board.whose_turn())
     x = board.get_all_valid_moves()
