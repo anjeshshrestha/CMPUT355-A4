@@ -269,7 +269,11 @@ def main():
     # { (x,y) : [[(x,y),(a,b)],[(x,y),(g,d),(f,h)]]
     # ...
     # }
-    x_temp = board.print_all_valid_moves()
+    
+    x_temp = board.get_all_valid_moves()
+    #print all moves
+    board.print_all_valid_moves()
+    #print(x_temp)  #uncomment this to see what the valid moves return
     #basically selects a move
     selected_move = board.get_best_move(x_temp)
     #passes the selected move to move the piece
