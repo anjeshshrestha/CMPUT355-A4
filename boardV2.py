@@ -58,12 +58,15 @@ class Board:
     #move a piece from before to after
     # needs:
     # clean up
-    # check if move is valid
-    # check if correct player piece is moving (white is moving white)
+    # check if move is valid: PARTIAL
+    # check if correct player piece is moving (white is moving white) : YES
     def move(self,row,col, new_row,new_col):
-        
-
         piece = self.board[row][col]
+        
+        if new_col+new_row % 2 == 1:
+            print("Invalid position.")
+            return
+        elif (self.player == 1 and piece.color == "WHITE") or (self.player == 2 and piece.color == "RED"):
         #move the piece in pieces
         piece.move(new_row,new_col)
         #set new location to current piece
@@ -82,6 +85,8 @@ class Board:
 
         #change turns
         self.change_turn()
+        else:
+            print("Not player piece.")
 
     #change turn of play, should be called from move
     def change_turn(self):
