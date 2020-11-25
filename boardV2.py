@@ -61,10 +61,6 @@ class Board:
         print()
         
     #move a piece from before to after
-    # needs:
-    # clean up
-    # check if move is valid
-    # check if correct player piece is moving (white is moving white)
     def move(self,row,col, new_row,new_col):
         piece = self.board[row][col]
         #move the piece in pieces
@@ -116,7 +112,10 @@ class Board:
     #itterate over all pieces of player that is not captured
     #find moves it can make and save it a list
     #if a piece can capture, only return moves of pieces that can capture
-    #return list
+    #return dictionary
+    # { (x,y) : [[(x,y),(a,b)],[(x,y),(g,d),(f,h)]]
+    #   ....
+    # }
     def get_all_valid_moves(self):
         all_moves = {}
         all_capture_moves = {}
@@ -140,6 +139,7 @@ class Board:
             return all_capture_moves
         else:
             return all_moves
+        
     #print all moves a piece can make
     def print_all_valid_moves(self):
         temp = self.get_all_valid_moves()
@@ -178,7 +178,7 @@ class Board:
                 tempo_dict[(row,col)].extend(new_check)
         x = self.dfs((piece.row,piece.col),[],tempo_dict,[])
 
-        ###need to un-nest the x and append to moves
+        ### un-nest the x
         temp_moves = []
         if (piece.row,piece.col) not in x:
             for y in x:
@@ -187,12 +187,14 @@ class Board:
             return (True, temp_moves)
         else:
             return (False, moves)
+        
     #unnest a nested list [[1,2,3]] -> [1,2,3]
     def get_unNested(self,alist):
         if len(alist) == 1:
             return self.get_unNested(alist[0])
         else:
             return alist
+        
     #checks if it can capture a piece next to it and jump to a empty spot
     def can_capture(self,piece,row,col):
         temp = []
@@ -226,6 +228,7 @@ class Board:
                 for x in graph[node]:
                     temp.append(self.dfs(x,visited,graph,path.copy()))
         return temp
+    
     #handles sequence of moves and capturing 
     def make_moves(self, moves):
         cur_row,cur_col = moves[0]
@@ -257,10 +260,22 @@ class Board:
                     best = len(sequence)
                     best_move = sequence
         return best_move
-    
+
 def main():
     board = Board()
-    
+    #prints the board
+    board.print_board()
+    #gets all moves
+    # { (x,y) : [[(x,y),(a,b)],[(x,y),(g,d),(f,h)]]
+    # ...
+    # }
+    x_temp = board.print_all_valid_moves()
+    #basically selects a move
+    selected_move = board.get_best_move(x_temp)
+    #passes the selected move to move the piece
+    board.make_moves(selected_move)
+
+    """
     while not board.has_winner():
         board.print_board()
         print("Player:",board.whose_turn())
@@ -294,4 +309,5 @@ def main():
             board.make_moves(x_temp[(y,z)][zz])
         print("---------------------------------------")
     print(board.get_winner())
+    """
 main()
