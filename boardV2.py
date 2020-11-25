@@ -19,7 +19,7 @@ class Board:
         self.player2PiecesCount = 0
         self.create_board()
 
-    
+    #returns a piece on the board
     def get_piece(self, row, col):
         return self.board[row][col]
     
