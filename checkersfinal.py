@@ -1,4 +1,4 @@
-from board import Board
+from boardV2 import Board
 from random import randint
 from time import sleep
 
@@ -126,14 +126,18 @@ def human_vs_cpu_play(current_game):
     game_over = None
     #current_player = 1 # Black is 1, White is 2
 
+    iterations = 1
     while not game_over:
         #draw_iteration_details(current_game)
         #draw_board(current_game)
+        print("--------------------------------")
+        print("Move:",iterations)
         if human_turn: 
             human_play_turn(current_game)
         else:
             cpu_play_turn(current_game)
         
+        iterations += 1
         human_turn = not human_turn
         game_over = current_game.get_winner()
     
@@ -144,12 +148,14 @@ def human_vs_cpu_play(current_game):
     print_winner(current_game)
 
 def human_play_turn(current_game):
+
     permit = False
     current_game.print_board()
 
-    print("Player",current_game.whose_turn())
+    print("Player",current_game.whose_turn(),"- HUMAN PLAY")
     possible_moves = current_game.get_all_valid_moves()
-    print("Possible moves",possible_moves)
+    #print("ugly possible moves:",possible_moves)
+    pretty_print_moves(possible_moves)
     response = None
     where_to_move = None
     while True:
@@ -159,34 +165,50 @@ def human_play_turn(current_game):
     piece_to_move = list(possible_moves.keys())[response]
 
     while True:
+        print(possible_moves[piece_to_move])
         where_to_move = int(input("Move to:"))
-        if where_to_move < len(list(possible_moves[piece_to_move].keys())):
+        if where_to_move < len(list(possible_moves[piece_to_move])):
             break
-    current_game.make_move(possible_moves,piece_to_move,where_to_move)
+    current_game.make_moves(possible_moves[piece_to_move][where_to_move])
+
+def pretty_print_moves(dictionary_of_moves):
+    piece_index = 0
+    for piece_to_move in dictionary_of_moves:
+        final = []
+        print(piece_index,":",piece_to_move)
+        for where in dictionary_of_moves[piece_to_move]:
+            final.append(where)
+        move_index = 0
+        for l in final: 
+            print("   ",move_index,">",l)
+            move_index += 1
+        piece_index += 1
        
 
 # CPU actions for their turn
 # current_game  - the object on which the game is running on
 # game_strategy - CPUs have the option to employ several playing strategies
-# (Please note that due to the behaviour of the current Game library, 
-# it is not "truly" random as if a opportunity of capture exists, it prefers that)
+# list of game strategies:
+# random - CPUs randomly pick valid moves. Considerations of captures not included.
 def cpu_play_turn(current_game, game_strategy = 'random'):
     # game_strategies: random, minimax. add and implement if necessary
     if game_strategy == "random":
         current_game.print_board()
-        print("Player",current_game.whose_turn())
+        print("Player",current_game.whose_turn(),"- CPU PLAY")
 
         possible_moves = current_game.get_all_valid_moves()
-        print("CPU possible_moves",possible_moves)
+        pretty_print_moves(possible_moves)
 
         piece_to_move = None
         where_to_go = None
 
         random_number = randint(0,len(possible_moves)-1)
+        #print("CPU possible moves len",len(possible_moves))
         piece_to_move = list(possible_moves.keys())[random_number]
-        where_to_go = randint(0,len(list(possible_moves[piece_to_move].keys()))-1)
+        length = len(possible_moves[piece_to_move])
+        where_to_go = randint(0,length-1)
         
-        current_game.make_move(possible_moves,piece_to_move,where_to_go)
+        current_game.make_moves(possible_moves[piece_to_move][where_to_go])
         # random_piece = randint(0,len(possible_moves)-1)
         # current_game.move(possible_moves[move_to_go])
         # print("CPU moved: " + str(possible_moves[move_to_go]))
@@ -232,11 +254,11 @@ def print_winner(current_game):
         winner = current_game.get_winner()
         reason_for_loss = ["The previous player has moved 40 times without a capture. There is no winner." , 
                            "The winner captured the last opponent piece, thus ending the game."]
-        run_away = current_game.move_limit_reached()
+        #run_away = current_game.move_limit_reached()
 
-        if run_away:
-            print(reason_for_loss[0])
-        else:
+        #if run_away:
+        #    print(reason_for_loss[0])
+        #else:
             print(reason_for_loss[1])
             print("Black wins.") if winner == 1 else print("White wins.")
     else:
