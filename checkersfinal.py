@@ -128,8 +128,8 @@ def human_vs_cpu_play(current_game,pygame_instance = None):
     human_turn = False
     simulate_play = False
     
-    #response = input("Do you want to be first player? \n(To simulate, type 'simulate') (type 'yes', type anything else to be second.) > ")
-    response = "simulate"
+    response = input("Do you want to be first player? \n(To simulate, type 'simulate') (type 'yes', type anything else to be second.) > ")
+    
     if response == "yes":
         human_turn = True
     elif response == 'simulate':
