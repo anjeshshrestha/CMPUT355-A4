@@ -1,7 +1,10 @@
-from boardV2 import Board
+from board import Board
 from random import randint
 from time import sleep
+import sys
+from pygame_board import pygame,PyGameBoard
 
+# DEPRECIATED
 # draw_board
 # very basic cli function to draw board
 # uses the filled positions and the player pieces currently on board
@@ -79,6 +82,7 @@ def draw_board(current_game):
     #         if game.board.position_is_open(current_position):
     #             print("open position")
 
+# NOT CONVERTED FOR V2 BOARD
 # simulated play between two CPU players
 # current_game - the object on which the game is running on
 def simulated_play(current_game):
@@ -111,19 +115,28 @@ def simulated_play(current_game):
     draw_board(current_game)
 
     print_winner(current_game)
-    
+
 # checkers game between a person and a CPU
-def human_vs_cpu_play(current_game):
+def human_vs_cpu_play(current_game,pygame_instance = None):
     # allow keyboard input
     # make some sort of cli interface
     # determine who goes first
 
-    human_turn = None
-    while human_turn == None:
-        response = input("Do you want to be first player? (type 'yes'/type anything else for 'no') > ")
-        human_turn = True if response == "yes" else False
+    clock = pygame.time.Clock()
+    framerate = 2
+
+    human_turn = False
+    simulate_play = False
     
-    game_over = None
+    response = input("Do you want to be first player? \n(To simulate, type 'simulate') (type 'yes', type anything else to be second.) > ")
+     
+    if response == "yes":
+        human_turn = True
+    elif response == 'simulate':
+        simulate_play = True
+
+    
+    game_over = False
     #current_player = 1 # Black is 1, White is 2
 
     iterations = 1
@@ -132,44 +145,78 @@ def human_vs_cpu_play(current_game):
         #draw_board(current_game)
         print("--------------------------------")
         print("Move:",iterations)
-        if human_turn: 
-            human_play_turn(current_game)
+        print("Player",current_game.whose_turn(),"- HUMAN PLAY") if human_turn else print("Player",current_game.whose_turn(),"- CPU PLAY")
+
+        current_game.print_board()
+        play_strategy = 'random'
+
+        print("player 1 pieces count",current_game.player1PiecesCount)
+        print("player 2 pieces count",current_game.player2PiecesCount)
+
+        if pygame_instance:
+            for event in pygame.event.get():pass
+
+            pygame_instance.create_board(current_game.board)
+            pygame.display.update()
+            play_turn(current_game,human_turn,play_strategy)
+            #sleep(1)
         else:
-            cpu_play_turn(current_game)
+            play_turn(current_game,human_turn,play_strategy)
         
         iterations += 1
-        human_turn = not human_turn
-        game_over = current_game.get_winner()
+        if not simulate_play:
+            human_turn = not human_turn
+
+        game_over = current_game.has_winner()
     
     print("--------------------------")
     
     print("Final Iteration: " + str(len(current_game.moves) + 1))
-    draw_board(current_game)
-    print_winner(current_game)
-
-def human_play_turn(current_game):
-
-    permit = False
     current_game.print_board()
+    current_game.get_winner()
+    #print_winner(current_game)
 
-    print("Player",current_game.whose_turn(),"- HUMAN PLAY")
+
+def play_turn(current_game,is_human = False,game_strategy = 'random'):
     possible_moves = current_game.get_all_valid_moves()
-    #print("ugly possible moves:",possible_moves)
-    pretty_print_moves(possible_moves)
-    response = None
-    where_to_move = None
-    while True:
-        response = int(input("Choose piece to move:" ))
-        if response < len(possible_moves):
-            break
-    piece_to_move = list(possible_moves.keys())[response]
+    if is_human: pretty_print_moves(possible_moves)
+    if not is_human: pretty_print_moves(possible_moves)
+    piece_to_move = None
+    where_to_go = None
 
-    while True:
-        print(possible_moves[piece_to_move])
-        where_to_move = int(input("Move to:"))
-        if where_to_move < len(list(possible_moves[piece_to_move])):
-            break
-    current_game.make_moves(possible_moves[piece_to_move][where_to_move])
+    if is_human:
+        response = None
+        while True:
+            print("To quit, simply type a negative number.")
+            response = int(input("Choose piece to move:" ))
+            if response < len(possible_moves):
+                break
+            
+        if response < 0:
+            pygame.quit() 
+            sys.exit()
+        
+        piece_to_move = list(possible_moves.keys())[response]
+
+        while True:
+            #print(possible_moves[piece_to_move])
+            where_to_go = int(input("Move to:"))
+            if where_to_go < len(list(possible_moves[piece_to_move])):
+                break
+    else:
+        if game_strategy == "random":
+
+            random_number = randint(0,len(possible_moves)-1)
+            print("CPU possible moves len",len(possible_moves))
+            piece_to_move = list(possible_moves.keys())[random_number]
+            length = len(possible_moves[piece_to_move])
+            where_to_go = randint(0,length-1)
+            
+            # random_piece = randint(0,len(possible_moves)-1)
+            # current_game.move(possible_moves[move_to_go])
+            # print("CPU moved: " + str(possible_moves[move_to_go]))
+
+    current_game.make_moves(possible_moves[piece_to_move][where_to_go])
 
 def pretty_print_moves(dictionary_of_moves):
     piece_index = 0
@@ -183,19 +230,17 @@ def pretty_print_moves(dictionary_of_moves):
             print("   ",move_index,">",l)
             move_index += 1
         piece_index += 1
-       
 
+        
 # CPU actions for their turn
 # current_game  - the object on which the game is running on
 # game_strategy - CPUs have the option to employ several playing strategies
 # list of game strategies:
 # random - CPUs randomly pick valid moves. Considerations of captures not included.
 def cpu_play_turn(current_game, game_strategy = 'random'):
-    # game_strategies: random, minimax. add and implement if necessary
+    # game_strategies: random, ... add and implement if necessary
     if game_strategy == "random":
         current_game.print_board()
-        print("Player",current_game.whose_turn(),"- CPU PLAY")
-
         possible_moves = current_game.get_all_valid_moves()
         pretty_print_moves(possible_moves)
 
@@ -215,6 +260,7 @@ def cpu_play_turn(current_game, game_strategy = 'random'):
     else:
         return
 
+# DEPRECIATED
 # draw the current iteration details
 # such as move history, whose turn, and so on.
 def draw_iteration_details(current_game):
@@ -259,8 +305,8 @@ def print_winner(current_game):
         #if run_away:
         #    print(reason_for_loss[0])
         #else:
-            print(reason_for_loss[1])
-            print("Black wins.") if winner == 1 else print("White wins.")
+        print(reason_for_loss[1])
+        print("Black wins.") if winner == 1 else print("White wins.")
     else:
         print("No conclusive winner yet.")
     
@@ -268,6 +314,34 @@ def main():
     game = Board()
     #draw_board(game)
     game.create_board()
-    human_vs_cpu_play(game)
+    pygame_board = PyGameBoard()
+
+    human_vs_cpu_play(game,pygame_board)
+
+    #run_window(game,pygame_board)
+    
+
+#def run_window(current_game,visual_board):
+   
+    # running = True
+    # while running:
+    #     clock.tick(framerate)
+    #     for event in pygame.event.get():
+    #         print("pygame event",pygame.event.get())
+    #         # if event.type == pygame.QUIT:
+    #         #     pygame.quit()
+    #         #     sys.quit()
+    #         #     running = False
+    #ygame.display.set_caption("Checkers")
+
+    pygame.display.update()
+
+    #game.print_board()
+    #human_vs_cpu_play(game)
+
+def test_bench():
+    game = Board()
+    game.create_board()
+
 
 main()
