@@ -204,9 +204,6 @@ def play_turn(current_game,is_human = False,game_strategy = 'random'):
                 break
     else:
         if game_strategy == "random":
-            if len(possible_moves) == 0:
-                print("cant not make legal move")
-                sys.exit()
             random_number = randint(0,len(possible_moves)-1)
             print("CPU possible moves len",len(possible_moves))
             piece_to_move = list(possible_moves.keys())[random_number]

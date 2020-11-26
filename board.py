@@ -97,14 +97,27 @@ class Board:
 
     #check to see if there is a winner
     def has_winner(self):
-        return self.player1PiecesCount == 0 or self.player2PiecesCount == 0
+        return self.player1PiecesCount == 0 or self.player2PiecesCount == 0 or len(self.get_all_valid_moves()) == 0
     
     #if there is no more pieces left return who won
     def get_winner(self):
         if self.player1PiecesCount == 0:
-            return "Player 1 is Winner"
-        elif self.player2PiecesCount == 0:
             return "Player 2 is Winner"
+        elif self.player2PiecesCount == 0:
+            return "Player 1 is Winner"
+        elif self.player1PiecesCount == self.player2PiecesCount:
+            p1King = 0
+            p2King = 0
+            for k in self.player1Pieces:
+                if k.king:
+                    p1King += 1
+            for k in self.player2Pieces:
+                if k.king:
+                    p2King += 1
+            if p1King == p2King:
+                return "Game is Draw"
+            
+        return "Player " + str((self.player % 1)) + " is Winner"
 
     #itterate over all pieces of player that is not captured
     #find moves it can make and save it a list
@@ -199,6 +212,7 @@ class Board:
         else:
             return (False, moves)
     def cyclic(self,g):
+        #https://codereview.stackexchange.com/questions/86021/check-if-a-directed-graph-contains-a-cycle
         """Return True if the directed graph g has a cycle.
         g must be represented as a dictionary mapping vertices to
         iterables of neighbouring vertices. For example:
@@ -207,7 +221,6 @@ class Board:
         True
         >>> cyclic({1: (2,), 2: (3,), 3: (4,)})
         False
-
         """
         path = set()
         visited = set()
