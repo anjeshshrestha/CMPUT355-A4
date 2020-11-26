@@ -7,8 +7,8 @@ class Piece:
         self.colorKing = colorKing
         self.king = False
         self.captured = False
-
-    def move(self, row, col):
+    
+    def move(self, row,col):
         self.row = row
         self.col = col
 
@@ -20,3 +20,6 @@ class Piece:
 
     def make_king(self):
         self.king = True
+
+    def __repr__(self):
+        return str(self.color) + ": (" +str(self.row) + ", " + str(self.col) + ")"
