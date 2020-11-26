@@ -17,7 +17,7 @@ class Board:
         self.player1PiecesCount = 0
         self.player2Pieces = []
         self.player2PiecesCount = 0
-        self.create_board()
+        #self.create_board()
 
     #returns a piece on the board
     def get_piece(self, row, col):
@@ -79,9 +79,6 @@ class Board:
         #record the move
         self.moves.append([(row,col),(new_row,new_col)])
 
-        #change turns
-        self.change_turn()
-
     #change turn of play, should be called from move
     def change_turn(self):
         if self.player == 1:
@@ -119,10 +116,13 @@ class Board:
     def get_all_valid_moves(self):
         all_moves = {}
         all_capture_moves = {}
+        print("aaa1")
         if self.player == 1:
             for piece in self.player1Pieces:
                 if not piece.captured:
+                    print("aaa3")
                     capture, temp = self.get_valid_moves(piece)
+                    print("aaa7")
                     if capture:
                         all_capture_moves[(piece.row, piece.col)] = temp
                     elif temp != []:
@@ -130,14 +130,19 @@ class Board:
         else:
             for piece in self.player2Pieces:
                 if not piece.captured:
+                    print("aaa3")
                     capture, temp = self.get_valid_moves(piece)
+                    print("aaa7")
                     if capture:
                         all_capture_moves[(piece.row, piece.col)] = temp
                     if temp != []:
                         all_moves[(piece.row, piece.col)] = temp
+        print("aaa8")
         if all_capture_moves != {}:
+            print("aaa9")
             return all_capture_moves
         else:
+            print("aaa10")
             return all_moves
         
     #print all moves a piece can make
@@ -164,26 +169,35 @@ class Board:
                 moves.append([(piece.row,piece.col),(piece.row-1,piece.col+1)])
             if piece.row-1 >= 0 and piece.col-1 >= 0 and self.board[piece.row-1][piece.col-1] == 0: #left
                 moves.append([(piece.row,piece.col),(piece.row-1,piece.col-1)])
-                
+        print("aaa4")
         #check for capture pieces
         check_capture_list = [(piece.row,piece.col)]
         tempo_dict = {}
         while len(check_capture_list) !=0:
             row,col = check_capture_list.pop()
             new_check = self.can_capture(piece,row,col)
-            check_capture_list.extend(new_check)
+            for new in new_check:
+                if new not in tempo_dict:
+                    check_capture_list.append(new)
+            #check_capture_list.extend(new_check)
             if new_check:
                 if (row,col) not in tempo_dict:
                     tempo_dict[(row,col)] = []
+                print("HERER----------------------", tempo_dict, new_check)
                 tempo_dict[(row,col)].extend(new_check)
+            print("aaa5", check_capture_list)
+        print("aaa6")
         x = self.dfs((piece.row,piece.col),[],tempo_dict,[])
 
         ### un-nest the x
         temp_moves = []
         if (piece.row,piece.col) not in x:
+            print(x)
             for y in x:
                 temp_moves.append(self.get_unNested(y))
+            print("aaa66")
         if temp_moves != []:
+            print(temp_moves)
             return (True, temp_moves)
         else:
             return (False, moves)
@@ -231,13 +245,15 @@ class Board:
     
     #handles sequence of moves and capturing 
     def make_moves(self, moves):
+        print(moves)
         cur_row,cur_col = moves[0]
         for new_row, new_col in moves[1:]:
             print("Moving",self.playerColorShort[self.player], "From", (cur_row,cur_col), "to", (new_row,new_col))
             #move the piece
             self.move(cur_row,cur_col,new_row,new_col)
+            
             #condition check to see if there is piece in the way we have to capture
-            if abs(cur_row-new_row) >1 or abs(cur_col-new_col) > 1:
+            if abs(cur_row-new_row) > 1 or abs(cur_col-new_col) > 1:
                 mid_row = (new_row+cur_row)//2
                 mid_col = (new_col+cur_col)//2
                 print("!!! Capturing", (mid_row,mid_col))
@@ -249,6 +265,8 @@ class Board:
                 elif self.player == 2:
                     self.player1PiecesCount -= 1
             cur_row,cur_col = new_row,new_col
+        #change turns
+        self.change_turn()
 
     #make move with most captures or first found
     def get_best_move(self,moves):
@@ -314,4 +332,4 @@ def main():
         print("---------------------------------------")
     print(board.get_winner())
     """
-main()
+#main()
