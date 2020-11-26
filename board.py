@@ -1,3 +1,5 @@
+from sys import flags
+
 from piece import Piece
 # assume player 1 is white
 # assume player 2 is red
@@ -17,7 +19,7 @@ class Board:
         self.player1PiecesCount = 0
         self.player2Pieces = []
         self.player2PiecesCount = 0
-        #self.create_board()
+        self.create_board()
 
     #returns a piece on the board
     def get_piece(self, row, col):
@@ -61,7 +63,7 @@ class Board:
         print()
         
     #move a piece from before to after
-    def move(self,row,col, new_row,new_col):
+    def move(self, row,col, new_row, new_col):
         piece = self.board[row][col]
         #move the piece in pieces
         piece.move(new_row,new_col)
@@ -102,9 +104,16 @@ class Board:
     #if there is no more pieces left return who won
     def get_winner(self):
         if self.player1PiecesCount == 0:
-            return "Player 1 is Winner"
+            return "Player 1 is Winner" # Isn't it the opposite?
         elif self.player2PiecesCount == 0:
             return "Player 2 is Winner"
+
+    def to_play_won(self):
+        if self.whose_turn() == 1 and self.player2PiecesCount == 0:
+            return True
+        if self.whose_turn() == 2 and self.player1PiecesCount == 0:
+            return True
+        return False
 
     #itterate over all pieces of player that is not captured
     #find moves it can make and save it a list
@@ -116,13 +125,13 @@ class Board:
     def get_all_valid_moves(self):
         all_moves = {}
         all_capture_moves = {}
-        print("aaa1")
+        #print("aaa1")
         if self.player == 1:
             for piece in self.player1Pieces:
                 if not piece.captured:
-                    print("aaa3")
+                    #print("aaa3")
                     capture, temp = self.get_valid_moves(piece)
-                    print("aaa7")
+                    #print("aaa7")
                     if capture:
                         all_capture_moves[(piece.row, piece.col)] = temp
                     elif temp != []:
@@ -130,21 +139,36 @@ class Board:
         else:
             for piece in self.player2Pieces:
                 if not piece.captured:
-                    print("aaa3")
+                    #print("aaa3")
                     capture, temp = self.get_valid_moves(piece)
-                    print("aaa7")
+                    #print("aaa7")
                     if capture:
                         all_capture_moves[(piece.row, piece.col)] = temp
                     if temp != []:
                         all_moves[(piece.row, piece.col)] = temp
-        print("aaa8")
+        #print("aaa8")
         if all_capture_moves != {}:
-            print("aaa9")
+            #print("aaa9")
             return all_capture_moves
         else:
-            print("aaa10")
+            #print("aaa10")
             return all_moves
-        
+
+    def get_all_valid_moves_as_list(self):
+        # Gets all legal moves as list of lists of tuples
+        # {(1, 0): [ [(1, 0), (2, 1)] ],
+        # (1, 2): [ [(1, 2), (2, 1)] ],
+        # (3, 2): [ [(3, 2), (4, 3)], [(3, 2), (4, 1)] ],
+        # (2, 3): [ [(2, 3), (3, 4)] ],
+        # (2, 5): [ [(2, 5), (3, 6)], [(2, 5), (3, 4)] ],
+        # (2, 7): [ [(2, 7), (3, 6)] ]}
+        moves_dict = self.get_all_valid_moves()
+        moves_list = []
+        for moves in moves_dict.values():
+            for move in moves:
+                moves_list.append(move)
+        return moves_list
+
     #print all moves a piece can make
     def print_all_valid_moves(self):
         temp = self.get_all_valid_moves()
@@ -169,7 +193,7 @@ class Board:
                 moves.append([(piece.row,piece.col),(piece.row-1,piece.col+1)])
             if piece.row-1 >= 0 and piece.col-1 >= 0 and self.board[piece.row-1][piece.col-1] == 0: #left
                 moves.append([(piece.row,piece.col),(piece.row-1,piece.col-1)])
-        print("aaa4")
+        #print("aaa4")
         #check for capture pieces
         check_capture_list = [(piece.row,piece.col)]
         tempo_dict = {}
@@ -183,21 +207,21 @@ class Board:
             if new_check:
                 if (row,col) not in tempo_dict:
                     tempo_dict[(row,col)] = []
-                print("HERER----------------------", tempo_dict, new_check)
+                #print("HERER----------------------", tempo_dict, new_check)
                 tempo_dict[(row,col)].extend(new_check)
-            print("aaa5", check_capture_list)
-        print("aaa6")
+            #print("aaa5", check_capture_list)
+        #print("aaa6")
         x = self.dfs((piece.row,piece.col),[],tempo_dict,[])
 
         ### un-nest the x
         temp_moves = []
         if (piece.row,piece.col) not in x:
-            print(x)
+            #print(x)
             for y in x:
                 temp_moves.append(self.get_unNested(y))
-            print("aaa66")
+            #print("aaa66")
         if temp_moves != []:
-            print(temp_moves)
+            #print(temp_moves)
             return (True, temp_moves)
         else:
             return (False, moves)
@@ -245,10 +269,10 @@ class Board:
     
     #handles sequence of moves and capturing 
     def make_moves(self, moves):
-        print(moves)
+        #print(moves)
         cur_row,cur_col = moves[0]
         for new_row, new_col in moves[1:]:
-            print("Moving",self.playerColorShort[self.player], "From", (cur_row,cur_col), "to", (new_row,new_col))
+            #print("Moving", self.playerColorShort[self.player], "From", (cur_row,cur_col), "to", (new_row,new_col))
             #move the piece
             self.move(cur_row,cur_col,new_row,new_col)
             
@@ -256,7 +280,7 @@ class Board:
             if abs(cur_row-new_row) > 1 or abs(cur_col-new_col) > 1:
                 mid_row = (new_row+cur_row)//2
                 mid_col = (new_col+cur_col)//2
-                print("!!! Capturing", (mid_row,mid_col))
+                #print("!!! Capturing", (mid_row,mid_col))
                 remove_piece = self.board[mid_row][mid_col]
                 remove_piece.capture()
                 self.board[mid_row][mid_col] = 0
@@ -269,7 +293,7 @@ class Board:
         self.change_turn()
 
     #make move with most captures or first found
-    def get_best_move(self,moves):
+    def get_best_move(self, moves):
         best = -1
         best_move = None
         for piece, move in moves.items():
@@ -279,57 +303,14 @@ class Board:
                     best_move = sequence
         return best_move
 
-def main():
-    board = Board()
-    #prints the board
-    board.print_board()
-    #gets all moves
-    # { (x,y) : [[(x,y),(a,b)],[(x,y),(g,d),(f,h)]]
-    # ...
-    # }
-    
-    x_temp = board.get_all_valid_moves()
-    #print all moves
-    board.print_all_valid_moves()
-    #print(x_temp)  #uncomment this to see what the valid moves return
-    #basically selects a move
-    selected_move = board.get_best_move(x_temp)
-    #passes the selected move to move the piece
-    board.make_moves(selected_move)
-
-    """
-    while not board.has_winner():
-        board.print_board()
-        print("Player:",board.whose_turn())
-        x_temp = board.print_all_valid_moves()
-        print("Get best move: 1")
-        print("Make move: 2")
-        x = int(input())
-        if x_temp == {}:
-            print("Stalemate")
-            break
-        if x == 1:
-            print(board.get_best_move(x_temp))
-            print("Make best move: 1")
-            print("Make move: 2")
-            x = int(input())
-            if x == 1:
-                board.make_moves(board.get_best_move(x_temp))
-            else:
-                continue
-        if x == 2:
-            y = int(input("piece to move, positon row: "))
-            z = int(input("piece to move, positon col: "))
-            if (y,z) not in x_temp:
-                continue
-            
-            print(x_temp[(y,z)])
-            zz = int(input("sequence to make: "))
-            if zz >= len(x_temp[(y,z)]):
-                continue
-            print(x_temp[(y,z)][zz])
-            board.make_moves(x_temp[(y,z)][zz])
-        print("---------------------------------------")
-    print(board.get_winner())
-    """
-#main()
+    def get_board_heuristic(self):
+        # Return a heuristic of the state of the board for
+        # the current player
+        # Trying percentage of pieces that are the current player's
+        # We want it to be negative if it's in favour of the other player
+        # so subtract 0.5
+        if self.whose_turn() == 1:
+            heuristic = self.player1PiecesCount / (self.player1PiecesCount + self.player2PiecesCount) - 0.5
+        else:
+            heuristic = self.player2PiecesCount / (self.player1PiecesCount + self.player2PiecesCount) - 0.5
+        return heuristic
