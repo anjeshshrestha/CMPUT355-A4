@@ -192,7 +192,6 @@ def play_turn(current_game,is_human = False,game_strategy = 'random'):
                 break
             
         if response < 0:
-            input()
             pygame.quit() 
             sys.exit()
         
@@ -207,7 +206,6 @@ def play_turn(current_game,is_human = False,game_strategy = 'random'):
         if game_strategy == "random":
             if len(possible_moves) == 0:
                 print("cant not make legal move")
-                input()
                 sys.exit()
             random_number = randint(0,len(possible_moves)-1)
             print("CPU possible moves len",len(possible_moves))
