@@ -286,7 +286,6 @@ class Board:
     
     #handles sequence of moves and capturing 
     def make_moves(self, moves):
-        print("````",moves)
         cur_row,cur_col = moves[0]
         for new_row, new_col in moves[1:]:
             print("Moving",self.playerColorShort[self.player], "From", (cur_row,cur_col), "to", (new_row,new_col))
