@@ -102,7 +102,8 @@ def play_turn(current_game,is_human = False,game_strategy = 'random'):
                 break
             
         if response < 0:
-            pygame.quit() 
+            #input()
+            #pygame.quit() 
             exit()
         
         piece_to_move = list(possible_moves.keys())[response]
@@ -119,7 +120,6 @@ def play_turn(current_game,is_human = False,game_strategy = 'random'):
             piece_to_move = list(possible_moves.keys())[random_number]
             length = len(possible_moves[piece_to_move])
             where_to_go = randint(0,length-1)
-            
         
     current_game.make_moves(possible_moves[piece_to_move][where_to_go])
 
@@ -147,3 +147,5 @@ def main():
     human_vs_cpu_play(game,pygame_board)
 
 main()
+input()
+
