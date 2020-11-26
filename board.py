@@ -17,7 +17,7 @@ class Board:
         self.player1PiecesCount = 0
         self.player2Pieces = []
         self.player2PiecesCount = 0
-        self.create_board()
+        #self.create_board()
 
     #returns a piece on the board
     def get_piece(self, row, col):
@@ -323,4 +323,4 @@ def main():
         print("---------------------------------------")
     print(board.get_winner())
     """
-main()
+#main()
