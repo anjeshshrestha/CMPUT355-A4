@@ -161,6 +161,7 @@ class Board:
                 moves.append([(piece.row,piece.col),(piece.row-1,piece.col+1)])
             if piece.row-1 >= 0 and piece.col-1 >= 0 and self.board[piece.row-1][piece.col-1] == 0: #left
                 moves.append([(piece.row,piece.col),(piece.row-1,piece.col-1)])
+                
         #check for capture pieces
         check_capture_list = [(piece.row,piece.col)]
         already_checked = []
@@ -169,31 +170,31 @@ class Board:
             row,col = check_capture_list.pop()
             if (row,col) in already_checked: #we already checked that place
                 continue
+            
             new_check = self.can_capture(piece,row,col)
             already_checked.append((row,col))
             check_capture_list.extend(new_check)
-            #check_capture_list.extend(new_check)
+            
             if new_check:
                 for new in new_check:
                     copy = dict(tempo_dict)
                     if (row,col) not in copy:
                         copy[(row,col)] = []
+                    if new in copy[(row,col)]:
+                        continue
                     copy[(row,col)].append(new)
                     if not self.cyclic(copy):
                         if (row,col) not in tempo_dict:
                             tempo_dict[(row,col)] = []
                         tempo_dict[(row,col)].append(new)
-        x = self.dfs((piece.row,piece.col),[],tempo_dict,[])
+        dump, x = self.dfs((piece.row,piece.col),[],tempo_dict,[])
 
         ### un-nest the x
         temp_moves = []
         if (piece.row,piece.col) not in x:
             for y in x:
-                temp = self.get_unNested(y)
-                if temp != []:
-                    temp_moves.append(temp)
+                temp_moves.append(self.get_unNested(y))
         if temp_moves != []:
-            print(temp_moves)
             return (True, temp_moves)
         else:
             return (False, moves)
@@ -256,17 +257,23 @@ class Board:
             if node not in graph or graph[node] == []:
                 visited.append(node)
                 path.append(node)
-                return path
+                return (True, path)
             else:
                 visited.append(node)
                 path.append(node)
                 for x in graph[node]:
-                    temp.append(self.dfs(x,visited,graph,path.copy()))
-        return temp
+                    test, y = self.dfs(x,visited,graph,path.copy())
+                    if y != []:
+                        if test:
+                            temp.append(y)
+                        else:
+                            temp.extend(y)
+        #temp = self.get_unNested(temp)
+        return (False, temp)
     
     #handles sequence of moves and capturing 
     def make_moves(self, moves):
-        print(moves)
+        print("````",moves)
         cur_row,cur_col = moves[0]
         for new_row, new_col in moves[1:]:
             print("Moving",self.playerColorShort[self.player], "From", (cur_row,cur_col), "to", (new_row,new_col))

@@ -128,8 +128,8 @@ def human_vs_cpu_play(current_game,pygame_instance = None):
     human_turn = False
     simulate_play = False
     
-    response = input("Do you want to be first player? \n(To simulate, type 'simulate') (type 'yes', type anything else to be second.) > ")
-     
+    #response = input("Do you want to be first player? \n(To simulate, type 'simulate') (type 'yes', type anything else to be second.) > ")
+    response = "simulate"
     if response == "yes":
         human_turn = True
     elif response == 'simulate':
@@ -192,6 +192,7 @@ def play_turn(current_game,is_human = False,game_strategy = 'random'):
                 break
             
         if response < 0:
+            input()
             pygame.quit() 
             sys.exit()
         
@@ -206,6 +207,7 @@ def play_turn(current_game,is_human = False,game_strategy = 'random'):
         if game_strategy == "random":
             if len(possible_moves) == 0:
                 print("cant not make legal move")
+                input()
                 sys.exit()
             random_number = randint(0,len(possible_moves)-1)
             print("CPU possible moves len",len(possible_moves))

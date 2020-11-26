@@ -1,23 +1,24 @@
 def dfs(node,visited,graph,path):
     temp = []
     if node not in visited:
-        print(node, "graph", graph)
-        print(node, "visited", visited)
         if node not in graph or graph[node] == []:
             print("--------path:",path)
             visited.append(node)
             path.append(node)
-            
-            return path
+            return (True, path)
         else:
             visited.append(node)
             path.append(node)
             for x in graph[node]:
                 print(x)
-                y = dfs(x,visited,graph,path.copy())
+                test, y = dfs(x,visited,graph,path.copy())
                 print(y)
-                temp.append(y)
-    return temp
+                if y != []:
+                    if test:
+                        temp.append(y)
+                    else:
+                        temp.extend(y)
+    return (False, temp)
 
 def cyclic(g):
     """Return True if the directed graph g has a cycle.
@@ -59,9 +60,15 @@ def cycle(graph):
         
     return bolean
 
-print(cyclic({(0, 5): [(2, 7)], (2, 7): [(4, 5)], (4, 5): [(2, 7)]}))
-print(cycle({(0, 5): [(2, 7)], (2, 7): [(4, 5)], (4, 5): [(2, 7)]}))
+def get_unNested(alist):
+    if len(alist) == 1:
+        return get_unNested(alist[0])
+    else:
+        return alist
+#print(get_unNested([[[(4, 3), (2, 5), (0, 7)], [(4, 3), (2, 5), (0, 3)], []]]))
+#print(cyclic({(0, 5): [(2, 7)], (2, 7): [(4, 5)], (4, 5): [(2, 7)]}))
+#print(cycle({(0, 5): [(2, 7)], (2, 7): [(4, 5)], (4, 5): [(2, 7)]}))
 
-#x = dfs((0, 5),[],{(0, 5): [(2, 7)], (2, 7): [(4, 5)], (4, 5): [(2, 7)]},[])
+x = dfs((4, 1),[],{(4, 1): [(2, 3)], (2, 3): [(4, 5), (0, 1), (0, 1)]},[])
 
-#print(x)
+print(x)
