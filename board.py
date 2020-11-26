@@ -1,3 +1,4 @@
+from sys import flags
 from piece import Piece
 # assume player 1 is white
 # assume player 2 is red
@@ -118,7 +119,12 @@ class Board:
                 return "Game is Draw"
             
         return "Player " + str((self.player % 2)+1) + " is Winner"
-
+    def to_play_won(self):
+        if self.whose_turn() == 1 and self.player2PiecesCount == 0:
+            return True
+        if self.whose_turn() == 2 and self.player1PiecesCount == 0:
+            return True
+        return False
     #itterate over all pieces of player that is not captured
     #find moves it can make and save it a list
     #if a piece can capture, only return moves of pieces that can capture
@@ -149,7 +155,20 @@ class Board:
             return all_capture_moves
         else:
             return all_moves
-        
+    def get_all_valid_moves_as_list(self):
+        # Gets all legal moves as list of lists of tuples
+        # {(1, 0): [ [(1, 0), (2, 1)] ],
+        # (1, 2): [ [(1, 2), (2, 1)] ],
+        # (3, 2): [ [(3, 2), (4, 3)], [(3, 2), (4, 1)] ],
+        # (2, 3): [ [(2, 3), (3, 4)] ],
+        # (2, 5): [ [(2, 5), (3, 6)], [(2, 5), (3, 4)] ],
+        # (2, 7): [ [(2, 7), (3, 6)] ]}
+        moves_dict = self.get_all_valid_moves()
+        moves_list = []
+        for moves in moves_dict.values():
+            for move in moves:
+                moves_list.append(move)
+        return moves_list
     #print all moves a piece can make
     def print_all_valid_moves(self):
         temp = self.get_all_valid_moves()
@@ -318,7 +337,18 @@ class Board:
                     best = len(sequence)
                     best_move = sequence
         return best_move
-
+    
+    def get_board_heuristic(self):
+        # Return a heuristic of the state of the board for
+        # the current player
+        # Trying percentage of pieces that are the current player's
+        # We want it to be negative if it's in favour of the other player
+        # so subtract 0.5
+        if self.whose_turn() == 1:
+            heuristic = self.player1PiecesCount / (self.player1PiecesCount + self.player2PiecesCount) - 0.5
+        else:
+            heuristic = self.player2PiecesCount / (self.player1PiecesCount + self.player2PiecesCount) - 0.5
+        return heuristic
 def main():
     board = Board()
     #prints the board
