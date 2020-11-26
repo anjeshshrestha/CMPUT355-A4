@@ -122,7 +122,7 @@ class Board:
                 if not piece.captured:
                     print("aaa3")
                     capture, temp = self.get_valid_moves(piece)
-                    print("aaa4")
+                    print("aaa7")
                     if capture:
                         all_capture_moves[(piece.row, piece.col)] = temp
                     elif temp != []:
@@ -130,7 +130,9 @@ class Board:
         else:
             for piece in self.player2Pieces:
                 if not piece.captured:
+                    print("aaa3")
                     capture, temp = self.get_valid_moves(piece)
+                    print("aaa7")
                     if capture:
                         all_capture_moves[(piece.row, piece.col)] = temp
                     if temp != []:
@@ -167,26 +169,33 @@ class Board:
                 moves.append([(piece.row,piece.col),(piece.row-1,piece.col+1)])
             if piece.row-1 >= 0 and piece.col-1 >= 0 and self.board[piece.row-1][piece.col-1] == 0: #left
                 moves.append([(piece.row,piece.col),(piece.row-1,piece.col-1)])
-                
+        print("aaa4")
         #check for capture pieces
         check_capture_list = [(piece.row,piece.col)]
         tempo_dict = {}
         while len(check_capture_list) !=0:
             row,col = check_capture_list.pop()
             new_check = self.can_capture(piece,row,col)
-            check_capture_list.extend(new_check)
+            for new in new_check:
+                if new not in tempo_dict:
+                    check_capture_list.append(new)
+            #check_capture_list.extend(new_check)
             if new_check:
                 if (row,col) not in tempo_dict:
                     tempo_dict[(row,col)] = []
+                print("HERER----------------------", tempo_dict, new_check)
                 tempo_dict[(row,col)].extend(new_check)
+            print("aaa5", check_capture_list)
+        print("aaa6")
         x = self.dfs((piece.row,piece.col),[],tempo_dict,[])
 
         ### un-nest the x
         temp_moves = []
-        print(x)
         if (piece.row,piece.col) not in x:
+            print(x)
             for y in x:
                 temp_moves.append(self.get_unNested(y))
+            print("aaa66")
         if temp_moves != []:
             print(temp_moves)
             return (True, temp_moves)

@@ -238,6 +238,7 @@ def play_turn(current_game,is_human = False,game_strategy = 'random'):
             # print("CPU moved: " + str(possible_moves[move_to_go]))
     print(possible_moves, piece_to_move, where_to_go)
     current_game.make_moves(possible_moves[piece_to_move][where_to_go])
+    print("peop12")
 
 def pretty_print_moves(dictionary_of_moves):
     piece_index = 0
