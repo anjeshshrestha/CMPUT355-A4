@@ -117,7 +117,7 @@ class Board:
             if p1King == p2King:
                 return "Game is Draw"
             
-        return "Player " + str((self.player % 1)) + " is Winner"
+        return "Player " + str((self.player % 2)+1) + " is Winner"
 
     #itterate over all pieces of player that is not captured
     #find moves it can make and save it a list
