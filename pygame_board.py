@@ -1,5 +1,4 @@
 import pygame
-from piece import Piece
 
 #board dimensions
 (WIDTH, HEIGHT) = (600,600)
@@ -9,14 +8,16 @@ WHITE = (255,255,255)
 GREY  = (177,177,177)
 RED   = (255,0,0)
 PINK  = (255, 128, 128)
+ROWS = 8
+COLS = 8
 
 class PyGameBoard:
-    def __init__(self, width = WIDTH, height = HEIGHT, rows = 8, cols = 8):
+    def __init__(self):
         pygame.init()
         self.width = WIDTH
         self.height = HEIGHT
-        self.rows = rows
-        self.cols = cols
+        self.rows = ROWS
+        self.cols = COLS
         self.board = []
         self.square_size = height // rows
         self.caption = "Checkers"
@@ -61,30 +62,3 @@ class PyGameBoard:
         self.update_piece_positions(new_board)
         self.add_squares()
         self.add_pieces()
-
-
-# class BoardPiece:
-#     def __init__(self,width,height,is_king,color):
-#         pass
-
-
-    
-# def main(list_board):
-#     pygame_board = PyGameBoard(list_board)
-#     #board.create_board()
-#     run_window(list_board,pygame_board)
-
-# def run_window(list_board,visual_board):
-#     clock = pygame.time.Clock()
-#     running = True
-#     while running:
-#         clock.tick(60)
-#         for event in pygame.event.get():
-#             if event.type == pygame.QUIT:
-#                 running = False
-#             # elif event.type == pygame.TEXTINPUT:
-#             #     game.board()
-#             visual_board.create_board()
-#             pygame.display.update()
-
-#main()
