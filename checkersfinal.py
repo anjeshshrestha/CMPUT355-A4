@@ -154,26 +154,17 @@ def human_vs_cpu_play(current_game,pygame_instance = None):
         print("player 2 pieces count",current_game.player2PiecesCount)
 
         if pygame_instance:
-            print("here1")
             for event in pygame.event.get():pass
-            print("here2")
             pygame_instance.create_board(current_game.board)
-            print("here3")
             pygame.display.update()
-            print("here4")
             play_turn(current_game,human_turn,play_strategy)
-            print("here5")
             #sleep(1)
             
         else:
-            print("here1")
             play_turn(current_game,human_turn,play_strategy)
-            print("here2")
-        print("here6")
         iterations += 1
         if not simulate_play:
             human_turn = not human_turn
-        print("here7")
 
         game_over = current_game.has_winner()
     
@@ -186,17 +177,11 @@ def human_vs_cpu_play(current_game,pygame_instance = None):
 
 
 def play_turn(current_game,is_human = False,game_strategy = 'random'):
-    print("peop1")
     possible_moves = current_game.get_all_valid_moves()
-    print("peop2")
     if is_human: pretty_print_moves(possible_moves)
-    print("peop3")
     if not is_human: pretty_print_moves(possible_moves)
-    print("peop4")
     piece_to_move = None
-    print("peop5")
     where_to_go = None
-    print("peop6")
 
     if is_human:
         response = None
@@ -219,26 +204,20 @@ def play_turn(current_game,is_human = False,game_strategy = 'random'):
                 break
     else:
         if game_strategy == "random":
-            print("peop7")
             if len(possible_moves) == 0:
                 print("cant not make legal move")
                 sys.exit()
-            print("peop8")
             random_number = randint(0,len(possible_moves)-1)
             print("CPU possible moves len",len(possible_moves))
             piece_to_move = list(possible_moves.keys())[random_number]
-            print("peop9")
             length = len(possible_moves[piece_to_move])
-            print("peop10")
             where_to_go = randint(0,length-1)
-    print("peop11")
             
             # random_piece = randint(0,len(possible_moves)-1)
             # current_game.move(possible_moves[move_to_go])
             # print("CPU moved: " + str(possible_moves[move_to_go]))
     print(possible_moves, piece_to_move, where_to_go)
     current_game.make_moves(possible_moves[piece_to_move][where_to_go])
-    print("peop12")
 
 def pretty_print_moves(dictionary_of_moves):
     piece_index = 0

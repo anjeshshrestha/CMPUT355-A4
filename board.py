@@ -116,13 +116,10 @@ class Board:
     def get_all_valid_moves(self):
         all_moves = {}
         all_capture_moves = {}
-        print("aaa1")
         if self.player == 1:
             for piece in self.player1Pieces:
                 if not piece.captured:
-                    print("aaa3")
                     capture, temp = self.get_valid_moves(piece)
-                    print("aaa7")
                     if capture:
                         all_capture_moves[(piece.row, piece.col)] = temp
                     elif temp != []:
@@ -130,19 +127,14 @@ class Board:
         else:
             for piece in self.player2Pieces:
                 if not piece.captured:
-                    print("aaa3")
                     capture, temp = self.get_valid_moves(piece)
-                    print("aaa7")
                     if capture:
                         all_capture_moves[(piece.row, piece.col)] = temp
                     if temp != []:
                         all_moves[(piece.row, piece.col)] = temp
-        print("aaa8")
         if all_capture_moves != {}:
-            print("aaa9")
             return all_capture_moves
         else:
-            print("aaa10")
             return all_moves
         
     #print all moves a piece can make
@@ -169,39 +161,68 @@ class Board:
                 moves.append([(piece.row,piece.col),(piece.row-1,piece.col+1)])
             if piece.row-1 >= 0 and piece.col-1 >= 0 and self.board[piece.row-1][piece.col-1] == 0: #left
                 moves.append([(piece.row,piece.col),(piece.row-1,piece.col-1)])
-        print("aaa4")
         #check for capture pieces
         check_capture_list = [(piece.row,piece.col)]
+        already_checked = []
         tempo_dict = {}
         while len(check_capture_list) !=0:
             row,col = check_capture_list.pop()
+            if (row,col) in already_checked: #we already checked that place
+                continue
             new_check = self.can_capture(piece,row,col)
-            for new in new_check:
-                if new not in tempo_dict:
-                    check_capture_list.append(new)
+            already_checked.append((row,col))
+            check_capture_list.extend(new_check)
             #check_capture_list.extend(new_check)
             if new_check:
-                if (row,col) not in tempo_dict:
-                    tempo_dict[(row,col)] = []
-                print("HERER----------------------", tempo_dict, new_check)
-                tempo_dict[(row,col)].extend(new_check)
-            print("aaa5", check_capture_list)
-        print("aaa6")
+                for new in new_check:
+                    copy = dict(tempo_dict)
+                    if (row,col) not in copy:
+                        copy[(row,col)] = []
+                    copy[(row,col)].append(new)
+                    if not self.cyclic(copy):
+                        if (row,col) not in tempo_dict:
+                            tempo_dict[(row,col)] = []
+                        tempo_dict[(row,col)].append(new)
         x = self.dfs((piece.row,piece.col),[],tempo_dict,[])
 
         ### un-nest the x
         temp_moves = []
         if (piece.row,piece.col) not in x:
-            print(x)
             for y in x:
-                temp_moves.append(self.get_unNested(y))
-            print("aaa66")
+                temp = self.get_unNested(y)
+                if temp != []:
+                    temp_moves.append(temp)
         if temp_moves != []:
             print(temp_moves)
             return (True, temp_moves)
         else:
             return (False, moves)
-        
+    def cyclic(self,g):
+        """Return True if the directed graph g has a cycle.
+        g must be represented as a dictionary mapping vertices to
+        iterables of neighbouring vertices. For example:
+
+        >>> cyclic({1: (2,), 2: (3,), 3: (1,)})
+        True
+        >>> cyclic({1: (2,), 2: (3,), 3: (4,)})
+        False
+
+        """
+        path = set()
+        visited = set()
+
+        def visit(vertex):
+            if vertex in visited:
+                return False
+            visited.add(vertex)
+            path.add(vertex)
+            for neighbour in g.get(vertex, ()):
+                if neighbour in path or visit(neighbour):
+                    return True
+            path.remove(vertex)
+            return False
+        return any(visit(v) for v in g)
+
     #unnest a nested list [[1,2,3]] -> [1,2,3]
     def get_unNested(self,alist):
         if len(alist) == 1:
