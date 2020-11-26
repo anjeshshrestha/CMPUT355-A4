@@ -192,7 +192,7 @@ def play_turn(current_game,is_human = False,game_strategy = 'random'):
                 break
             
         if response < 0:
-            pygame.quit() 
+            #pygame.quit()
             sys.exit()
         
         piece_to_move = list(possible_moves.keys())[response]
@@ -342,3 +342,4 @@ def test_bench():
 
 
 main()
+input()
