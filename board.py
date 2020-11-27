@@ -19,7 +19,7 @@ class Board:
         self.player1PiecesCount = 0
         self.player2Pieces = []
         self.player2PiecesCount = 0
-        # self.create_board()
+        self.create_board()
 
     # returns a piece on the board
     def get_piece(self, row, col):
@@ -329,7 +329,7 @@ class Board:
     def make_moves(self, moves):
         cur_row, cur_col = moves[0]
         for new_row, new_col in moves[1:]:
-            print("Moving", self.playerColorShort[self.player], "From", (cur_row, cur_col), "to", (new_row, new_col))
+            #print("Moving", self.playerColorShort[self.player], "From", (cur_row, cur_col), "to", (new_row, new_col))
             # move the piece
             self.move(cur_row, cur_col, new_row, new_col)
 
@@ -337,7 +337,7 @@ class Board:
             if abs(cur_row - new_row) > 1 or abs(cur_col - new_col) > 1:
                 mid_row = (new_row + cur_row) // 2
                 mid_col = (new_col + cur_col) // 2
-                print("!!! Capturing", (mid_row, mid_col))
+                #print("!!! Capturing", (mid_row, mid_col))
                 remove_piece = self.board[mid_row][mid_col]
                 remove_piece.capture()
                 self.board[mid_row][mid_col] = 0
