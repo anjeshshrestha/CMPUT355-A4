@@ -49,7 +49,13 @@ def human_vs_random_play(current_game, pygame_instance = None, play_strategy = A
     simulate_play = False
     
     response = input("Do you want to be first player? \n(To simulate, type 'simulate') (type 'yes', type anything else to be second.) > ")
-    
+
+    play_type = int(input("Will computer make (1)random or (2)AlphaBeta move: "))
+    if play_type == 1:
+        play_strategy = RANDOM
+    else:
+        play_strategy = ALPHABETA
+
     if response == "yes":
         human_turn = True
     elif response == 'simulate':

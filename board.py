@@ -360,14 +360,26 @@ class Board:
                     best_move = sequence
         return best_move
 
+    def get_king_count_for_player(self, player):
+        king_count = 0
+        if player == 1:
+            pieces = self.player1Pieces
+        else:
+            pieces = self.player2Pieces
+        for piece in self.player1Pieces:
+            if piece.king:
+                king_count += 1
+        return king_count
+
     def get_board_heuristic(self):
         # Return a heuristic of the state of the board for
         # the current player
-        # Trying percentage of pieces that are the current player's
-        # We want it to be negative if it's in favour of the other player
-        # so subtract 0.5
+        # Combination of the difference in the number of pieces and number
+        # of kings between the two players
+        p1_king_count = self.get_king_count_for_player(1)
+        p2_king_count = self.get_king_count_for_player(2)
         if self.whose_turn() == 1:
-            heuristic = self.player1PiecesCount / (self.player1PiecesCount + self.player2PiecesCount) - 0.5
+            heuristic = self.player1PiecesCount - self.player2PiecesCount + p1_king_count - p2_king_count
         else:
-            heuristic = self.player2PiecesCount / (self.player1PiecesCount + self.player2PiecesCount) - 0.5
+            heuristic = self.player2PiecesCount - self.player1PiecesCount + p2_king_count - p1_king_count
         return heuristic

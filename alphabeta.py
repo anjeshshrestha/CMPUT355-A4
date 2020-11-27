@@ -1,16 +1,19 @@
 from copy import deepcopy
 
 INFINITY = 1000000
-MAX_DEPTH = 7 # The bigger the better
+MAX_DEPTH = 4 # The bigger the better
+WIN = 100
+LOSS = -100
 
 def alphabeta(board, alpha = -INFINITY, beta = INFINITY, depth = 0):
     if board.has_winner():
         if board.to_play_won():
-            return 1
+            return WIN
         else:
-            return -1
+            return LOSS
     if depth >= MAX_DEPTH:
-        return board.get_board_heuristic()
+        heuristic = board.get_board_heuristic()
+        return heuristic
     moves = board.get_all_valid_moves_as_list()
     for move in moves:
         board_copy = deepcopy(board)
@@ -35,14 +38,16 @@ def play_move(board):
         board_copy = deepcopy(board)
         board_copy.make_moves(moves[i])
         ab = alphabeta(board_copy)
-        if ab == 1:
+        if ab == WIN:
             print(f'Found win: {moves[i]}')
+            board.make_moves(moves[i])
             return # This is the best we can do, so keep this move
         ab_results.append(ab)
     #print(moves)
     #print(ab_results)
 
-    # Pick the move with the best score:
+    # Pick the move with the best score
+    # TODO: If multiple moves with a best score, pick one at random
     move_index = ab_results.index(max(ab_results))
     move = moves[move_index]
     print(f'Playing: {move}')
