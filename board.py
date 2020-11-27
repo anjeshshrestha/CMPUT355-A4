@@ -1,3 +1,5 @@
+from sys import flags
+import sys
 from piece import Piece
 # assume player 1 is white
 # assume player 2 is red
@@ -17,7 +19,7 @@ class Board:
         self.player1PiecesCount = 0
         self.player2Pieces = []
         self.player2PiecesCount = 0
-        self.create_board()
+        #self.create_board()
 
     #returns a piece on the board
     def get_piece(self, row, col):
@@ -44,6 +46,7 @@ class Board:
                    
                 else:
                     self.board[row].append(0)
+                    
     #print board with padding of nubers
     def print_board(self):
         print("   0 1 2 3 4 5 6 7")
@@ -79,9 +82,6 @@ class Board:
         #record the move
         self.moves.append([(row,col),(new_row,new_col)])
 
-        #change turns
-        self.change_turn()
-
     #change turn of play, should be called from move
     def change_turn(self):
         if self.player == 1:
@@ -100,15 +100,33 @@ class Board:
 
     #check to see if there is a winner
     def has_winner(self):
-        return self.player1PiecesCount == 0 or self.player2PiecesCount == 0
+        return self.player1PiecesCount == 0 or self.player2PiecesCount == 0 or len(self.get_all_valid_moves()) == 0
     
     #if there is no more pieces left return who won
     def get_winner(self):
         if self.player1PiecesCount == 0:
-            return "Player 1 is Winner"
-        elif self.player2PiecesCount == 0:
             return "Player 2 is Winner"
-
+        elif self.player2PiecesCount == 0:
+            return "Player 1 is Winner"
+        elif self.player1PiecesCount == self.player2PiecesCount:
+            p1King = 0
+            p2King = 0
+            for k in self.player1Pieces:
+                if k.king:
+                    p1King += 1
+            for k in self.player2Pieces:
+                if k.king:
+                    p2King += 1
+            if p1King == p2King:
+                return "Game is Draw"
+            
+        return "Player " + str((self.player % 2)+1) + " is Winner"
+    def to_play_won(self):
+        if self.whose_turn() == 1 and self.player2PiecesCount == 0:
+            return True
+        if self.whose_turn() == 2 and self.player1PiecesCount == 0:
+            return True
+        return False
     #itterate over all pieces of player that is not captured
     #find moves it can make and save it a list
     #if a piece can capture, only return moves of pieces that can capture
@@ -117,35 +135,48 @@ class Board:
     #   ....
     # }
     def get_all_valid_moves(self):
-        all_moves = {}
-        all_capture_moves = {}
+        only_moves = {}
+        only_capture_moves = {}
         if self.player == 1:
             for piece in self.player1Pieces:
                 if not piece.captured:
-                    capture, temp = self.get_valid_moves(piece)
+                    capture, moves_list = self.get_valid_moves(piece)
                     if capture:
-                        all_capture_moves[(piece.row, piece.col)] = temp
-                    elif temp != []:
-                        all_moves[(piece.row, piece.col)] = temp
+                        only_capture_moves[(piece.row, piece.col)] = moves_list
+                    elif moves_list != []:
+                        only_moves[(piece.row, piece.col)] = moves_list
         else:
             for piece in self.player2Pieces:
                 if not piece.captured:
-                    capture, temp = self.get_valid_moves(piece)
+                    capture, moves_list = self.get_valid_moves(piece)
                     if capture:
-                        all_capture_moves[(piece.row, piece.col)] = temp
-                    if temp != []:
-                        all_moves[(piece.row, piece.col)] = temp
-        if all_capture_moves != {}:
-            return all_capture_moves
+                        only_capture_moves[(piece.row, piece.col)] = moves_list
+                    if moves_list != []:
+                        only_moves[(piece.row, piece.col)] = moves_list
+        if only_capture_moves != {}:
+            return only_capture_moves
         else:
-            return all_moves
-        
+            return only_moves
+    def get_all_valid_moves_as_list(self):
+        # Gets all legal moves as list of lists of tuples
+        # {(1, 0): [ [(1, 0), (2, 1)] ],
+        # (1, 2): [ [(1, 2), (2, 1)] ],
+        # (3, 2): [ [(3, 2), (4, 3)], [(3, 2), (4, 1)] ],
+        # (2, 3): [ [(2, 3), (3, 4)] ],
+        # (2, 5): [ [(2, 5), (3, 6)], [(2, 5), (3, 4)] ],
+        # (2, 7): [ [(2, 7), (3, 6)] ]}
+        moves_dict = self.get_all_valid_moves()
+        moves_list = []
+        for moves in moves_dict.values():
+            for move in moves:
+                moves_list.append(move)
+        return moves_list
     #print all moves a piece can make
     def print_all_valid_moves(self):
-        temp = self.get_all_valid_moves()
-        for piece, moves in temp.items():
+        list_of_moves = self.get_all_valid_moves()
+        for piece, moves in print_all_valid_moves.items():
             print(piece, moves)
-        return temp
+        return print_all_valid_moves
     
     #given a piece find position it can move to
     #find places it can move to
@@ -167,28 +198,69 @@ class Board:
                 
         #check for capture pieces
         check_capture_list = [(piece.row,piece.col)]
-        tempo_dict = {}
+        already_checked = []
+        capture_directed_graph = {}
         while len(check_capture_list) !=0:
             row,col = check_capture_list.pop()
+            if (row,col) in already_checked: #we already checked that place
+                continue
+            
             new_check = self.can_capture(piece,row,col)
+            already_checked.append((row,col))
             check_capture_list.extend(new_check)
+            
             if new_check:
-                if (row,col) not in tempo_dict:
-                    tempo_dict[(row,col)] = []
-                tempo_dict[(row,col)].extend(new_check)
-        x = self.dfs((piece.row,piece.col),[],tempo_dict,[])
+                for new in new_check:
+                    copy_graph = dict(capture_directed_graph)
+                    if (row,col) not in copy_graph:
+                        copy_graph[(row,col)] = []
+                    if new in copy_graph[(row,col)]:
+                        continue
+                    copy_graph[(row,col)].append(new)
+                    if not self.cyclic(copy_graph):
+                        if (row,col) not in capture_directed_graph:
+                            capture_directed_graph[(row,col)] = []
+                        capture_directed_graph[(row,col)].append(new)
+        dump_value, move_path_dictionary = self.dfs((piece.row,piece.col),[],capture_directed_graph,[])
 
         ### un-nest the x
         temp_moves = []
-        if (piece.row,piece.col) not in x:
-            for y in x:
+        if (piece.row,piece.col) not in move_path_dictionary:
+            for y in move_path_dictionary:
                 temp_moves.append(self.get_unNested(y))
+        
         if temp_moves != []:
             return (True, temp_moves)
         else:
             return (False, moves)
-        
+    def cyclic(self,g):
+        #https://codereview.stackexchange.com/questions/86021/check-if-a-directed-graph-contains-a-cycle
+        """Return True if the directed graph g has a cycle.
+        g must be represented as a dictionary mapping vertices to
+        iterables of neighbouring vertices. For example:
+
+        >>> cyclic({1: (2,), 2: (3,), 3: (1,)})
+        True
+        >>> cyclic({1: (2,), 2: (3,), 3: (4,)})
+        False
+        """
+        path = set()
+        visited = set()
+
+        def visit(vertex):
+            if vertex in visited:
+                return False
+            visited.add(vertex)
+            path.add(vertex)
+            for neighbour in g.get(vertex, ()):
+                if neighbour in path or visit(neighbour):
+                    return True
+            path.remove(vertex)
+            return False
+        return any(visit(v) for v in g)
+
     #unnest a nested list [[1,2,3]] -> [1,2,3]
+    ### NO LONGER NEED I THINK - NO TEST HAS BEEN DONE
     def get_unNested(self,alist):
         if len(alist) == 1:
             return self.get_unNested(alist[0])
@@ -197,37 +269,43 @@ class Board:
         
     #checks if it can capture a piece next to it and jump to a empty spot
     def can_capture(self,piece,row,col):
-        temp = []
+        new_position_placement = []
         if piece.king or self.player==1: # look moving down
             if row+1 < self.rows and col+1 < self.cols:
                 if self.board[row+1][col+1] != 0 and self.board[row+1][col+1].color != piece.color and self.valid_position(row+2,col+2) and self.board[row+2][col+2] == 0:
-                    temp.append((row+2,col+2)) #right
+                    new_position_placement.append((row+2,col+2)) #right
             if row+1 < self.rows and col-1 >= 0:
                 if self.board[row+1][col-1] != 0 and self.board[row+1][col-1].color != piece.color and self.valid_position(row+2,col-2) and self.board[row+2][col-2] == 0:
-                    temp.append((row+2,col-2))#left
+                    new_position_placement.append((row+2,col-2))#left
         if piece.king or self.player==2: # look moving up
             if row-1 >= 0 and col+1 < self.cols:
                 if self.board[row-1][col+1] != 0 and self.board[row-1][col+1].color != piece.color and self.valid_position(row-2,col+2) and self.board[row-2][col+2] == 0:
-                    temp.append((row-2,col+2))#right
+                    new_position_placement.append((row-2,col+2))#right
             if row-1 >= 0 and col-1 >= 0:
                 if self.board[row-1][col-1] != 0 and self.board[row-1][col-1].color != piece.color and self.valid_position(row-2,col-2) and self.board[row-2][col-2] == 0:
-                    temp.append((row-2,col-2))#left
-        return temp
+                    new_position_placement.append((row-2,col-2))#left
+        return new_position_placement
 
-    #return a sequence of moves for capture from a graph/tree
+    #return all sequence of moves for captures from a graph/tree
     def dfs(self,node,visited,graph,path):
-        temp = []
+        list_of_paths = []
         if node not in visited:
             if node not in graph or graph[node] == []:
                 visited.append(node)
                 path.append(node)
-                return path
+                return (True, path)
             else:
                 visited.append(node)
                 path.append(node)
-                for x in graph[node]:
-                    temp.append(self.dfs(x,visited,graph,path.copy()))
-        return temp
+                for neighbour in graph[node]:
+                    is_path, returned_path = self.dfs(neighbour,visited,graph,path.copy())
+                    if returned_path != []:
+                        if is_path:
+                            list_of_paths.append(returned_path)
+                        else:
+                            list_of_paths.extend(returned_path)
+        #temp = self.get_unNested(temp)
+        return (False, list_of_paths)
     
     #handles sequence of moves and capturing 
     def make_moves(self, moves):
@@ -236,8 +314,9 @@ class Board:
             print("Moving",self.playerColorShort[self.player], "From", (cur_row,cur_col), "to", (new_row,new_col))
             #move the piece
             self.move(cur_row,cur_col,new_row,new_col)
+            
             #condition check to see if there is piece in the way we have to capture
-            if abs(cur_row-new_row) >1 or abs(cur_col-new_col) > 1:
+            if abs(cur_row-new_row) > 1 or abs(cur_col-new_col) > 1:
                 mid_row = (new_row+cur_row)//2
                 mid_col = (new_col+cur_col)//2
                 print("!!! Capturing", (mid_row,mid_col))
@@ -249,6 +328,8 @@ class Board:
                 elif self.player == 2:
                     self.player1PiecesCount -= 1
             cur_row,cur_col = new_row,new_col
+        #change turns
+        self.change_turn()
 
     #make move with most captures or first found
     def get_best_move(self,moves):
@@ -260,7 +341,19 @@ class Board:
                     best = len(sequence)
                     best_move = sequence
         return best_move
-
+    
+    def get_board_heuristic(self):
+        # Return a heuristic of the state of the board for
+        # the current player
+        # Trying percentage of pieces that are the current player's
+        # We want it to be negative if it's in favour of the other player
+        # so subtract 0.5
+        if self.whose_turn() == 1:
+            heuristic = self.player1PiecesCount / (self.player1PiecesCount + self.player2PiecesCount) - 0.5
+        else:
+            heuristic = self.player2PiecesCount / (self.player1PiecesCount + self.player2PiecesCount) - 0.5
+        return heuristic
+    
 def main():
     board = Board()
     #prints the board
@@ -314,4 +407,4 @@ def main():
         print("---------------------------------------")
     print(board.get_winner())
     """
-main()
+#main()
