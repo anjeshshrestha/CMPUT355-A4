@@ -1,123 +1,43 @@
 from board import Board
 from random import randint
-from time import sleep
-import sys
+from sys import flags, exit
 from pygame_board import pygame,PyGameBoard
+import alphabeta
 
-# DEPRECIATED
-# draw_board
-# very basic cli function to draw board
-# uses the filled positions and the player pieces currently on board
-# black is b, white is w
-# kings are capitalized (ie. B, W)
-# invalid positions are periods or '.'
-# valid positions, not including player legality, are "#"
-# (assuming left to right, top to down representation of array)
-def draw_board(current_game):
-    rows_to_print = []
-    string_to_add = ""
+ALPHABETA = 'alphabeta'
+RANDOM = 'random'
 
-    # remember modulo whatever width to know when to cut and add to rows_to_print
-    board = current_game.board
-    filled_positions = board.searcher.filled_positions
-    odd_row = False
-    # add single bar at beginning of odd row
-    lone_bar_exists = False
-    printed_index = False
+def human_vs_alphabeta_no_gui(board):
+    # Use this function to play without the pygame gui
+    # Loop while we don't have a winner
+    while not board.has_winner():
+        # First get user input for white
+        board.print_board()
+        valid_moves = board.print_all_valid_moves()
+        print(valid_moves)
+        print("Select a piece to move:")
+        piece_row = int(input("row: "))
+        piece_col = int(input("column: "))
+        if (piece_row, piece_col) not in valid_moves:
+            print("Not a valid piece")
+            continue
+        print("Select move to make (by index): ")
+        moves_for_piece = valid_moves[piece_row, piece_col]
+        print(moves_for_piece)
+        move_index = int(input())
+        if move_index > len(moves_for_piece):
+            print("Not a valid move index")
+            continue
+        move = moves_for_piece[move_index][1]
+        board.make_moves([(piece_row, piece_col), (move[0], move[1])])
+        board.print_board()
 
-    rows_to_print.append("- Black Origin - ")
+        # Now let our player play for black
+        print("Thinking....")
+        alphabeta.play_move(board)
 
-    rows_to_print.append("--------------------")
-
-    # iterate through each valid position
-    for index in range(1,board.position_count+1):
-
-        current_piece = board.searcher.get_piece_by_position(index)
-        if not printed_index: 
-            if index < 10:
-                string_to_add += "0"
-            string_to_add += str(index) + " "
-        printed_index = True
-
-        if not odd_row: string_to_add += "|.|" 
-        elif odd_row and not lone_bar_exists: 
-            string_to_add += "|"
-            lone_bar_exists = True
-
-        # if the current index is occupied, then
-        # mark as appropriate
-        if index in board.searcher.filled_positions:
-            piece_is_king = current_piece.king
-            if current_piece in board.searcher.get_pieces_by_player(1):
-                if piece_is_king: string_to_add += "B"
-                else: string_to_add += "b"
-            else:
-                if piece_is_king: string_to_add += "W"
-                else: string_to_add += "w"
-        else:
-            string_to_add += "#"
-        
-        if odd_row: string_to_add += "|.|"
-
-        # make new row to print every 4 valid positions
-        if index % board.width == 0:
-            if not odd_row:
-                odd_row = True
-                string_to_add += "|"
-            else:
-                odd_row = False
-            lone_bar_exists = printed_index = False
-            rows_to_print.append(string_to_add)
-            rows_to_print.append("--------------------")
-            string_to_add = ""
-    
-    rows_to_print.append("- White Origin -")
-    for i in rows_to_print:
-        print(i)
-        
-    # for row in range(game.board.height):
-    #     for column in range(game.board.width):
-    #         current_position = game.board.position_layout[row][column]
-    #         print(current_position)
-    #         if game.board.position_is_open(current_position):
-    #             print("open position")
-
-# NOT CONVERTED FOR V2 BOARD
-# simulated play between two CPU players
-# current_game - the object on which the game is running on
-def simulated_play(current_game):
-    # assume player 1 is black
-    # assume player 2 is white
-    game_over = False
-    current_player = 0 # for now, first player will be Black
-    current_iteration = 1
-    last_move = ""
-    while game_over == False:
-        draw_iteration_details(current_game,current_iteration)
-
-        draw_board(current_game)
-
-        possible_moves = current_game.get_possible_moves()
-        random_number = randint(0, len(possible_moves)-1)
-
-        last_move = str(possible_moves[random_number])
-
-        current_game.move(possible_moves[random_number])
-
-        print()
-
-        game_over =  current_game.is_over()
-    
-    
-    print("--------------------------")
-    
-    print("Final Iteration: " + str(current_iteration))
-    draw_board(current_game)
-
-    print_winner(current_game)
-
-# checkers game between a person and a CPU
-def human_vs_cpu_play(current_game,pygame_instance = None):
+# checkers game between a person and a random player
+def human_vs_random_play(current_game, pygame_instance = None, play_strategy = ALPHABETA):
     # allow keyboard input
     # make some sort of cli interface
     # determine who goes first
@@ -129,7 +49,13 @@ def human_vs_cpu_play(current_game,pygame_instance = None):
     simulate_play = False
     
     response = input("Do you want to be first player? \n(To simulate, type 'simulate') (type 'yes', type anything else to be second.) > ")
-    
+
+    play_type = int(input("Will computer make (1)random or (2)AlphaBeta move: "))
+    if play_type == 1:
+        play_strategy = RANDOM
+    else:
+        play_strategy = ALPHABETA
+
     if response == "yes":
         human_turn = True
     elif response == 'simulate':
@@ -144,11 +70,10 @@ def human_vs_cpu_play(current_game,pygame_instance = None):
         #draw_iteration_details(current_game)
         #draw_board(current_game)
         print("--------------------------------")
-        print("Move:",iterations)
+        print("Move: ",iterations)
         print("Player",current_game.whose_turn(),"- HUMAN PLAY") if human_turn else print("Player",current_game.whose_turn(),"- CPU PLAY")
 
         current_game.print_board()
-        play_strategy = 'random'
 
         print("player 1 pieces count",current_game.player1PiecesCount)
         print("player 2 pieces count",current_game.player2PiecesCount)
@@ -175,11 +100,9 @@ def human_vs_cpu_play(current_game,pygame_instance = None):
     print(current_game.get_winner())
     #print_winner(current_game)
 
-
-def play_turn(current_game,is_human = False,game_strategy = 'random'):
+def play_turn(current_game, is_human = False, game_strategy = ALPHABETA):
     possible_moves = current_game.get_all_valid_moves()
-    if is_human: pretty_print_moves(possible_moves)
-    if not is_human: pretty_print_moves(possible_moves)
+    pretty_print_moves(possible_moves)
     piece_to_move = None
     where_to_go = None
 
@@ -187,25 +110,26 @@ def play_turn(current_game,is_human = False,game_strategy = 'random'):
         response = None
         while True:
             print("To quit, simply type a negative number.")
-            response = int(input("Choose piece to move:" ))
+            response = int(input("Choose piece to move (by index): " ))
             if response < len(possible_moves):
                 break
             
         if response < 0:
             #pygame.quit()
-            sys.exit()
+            exit()
         
         piece_to_move = list(possible_moves.keys())[response]
 
         while True:
             #print(possible_moves[piece_to_move])
-            where_to_go = int(input("Move to:"))
+            where_to_go = int(input("Move to (by index): "))
             if where_to_go < len(list(possible_moves[piece_to_move])):
+                current_game.make_moves(possible_moves[piece_to_move][where_to_go])
                 break
     else:
-        if game_strategy == "random":
+        if game_strategy == RANDOM:
             random_number = randint(0,len(possible_moves)-1)
-            print("CPU possible moves len",len(possible_moves))
+            print("Random player possible moves len",len(possible_moves))
             piece_to_move = list(possible_moves.keys())[random_number]
             length = len(possible_moves[piece_to_move])
             where_to_go = randint(0,length-1)
@@ -213,7 +137,10 @@ def play_turn(current_game,is_human = False,game_strategy = 'random'):
             # random_piece = randint(0,len(possible_moves)-1)
             # current_game.move(possible_moves[move_to_go])
             # print("CPU moved: " + str(possible_moves[move_to_go]))
-    current_game.make_moves(possible_moves[piece_to_move][where_to_go])
+            current_game.make_moves(possible_moves[piece_to_move][where_to_go])
+        elif game_strategy == ALPHABETA:
+            print("Thinking....")
+            alphabeta.play_move(current_game)
 
 def pretty_print_moves(dictionary_of_moves):
     piece_index = 0
@@ -227,59 +154,6 @@ def pretty_print_moves(dictionary_of_moves):
             print("   ",move_index,">",l)
             move_index += 1
         piece_index += 1
-
-        
-# CPU actions for their turn
-# current_game  - the object on which the game is running on
-# game_strategy - CPUs have the option to employ several playing strategies
-# list of game strategies:
-# random - CPUs randomly pick valid moves. Considerations of captures not included.
-def cpu_play_turn(current_game, game_strategy = 'random'):
-    # game_strategies: random, ... add and implement if necessary
-    if game_strategy == "random":
-        current_game.print_board()
-        possible_moves = current_game.get_all_valid_moves()
-        pretty_print_moves(possible_moves)
-
-        piece_to_move = None
-        where_to_go = None
-
-        random_number = randint(0,len(possible_moves)-1)
-        #print("CPU possible moves len",len(possible_moves))
-        piece_to_move = list(possible_moves.keys())[random_number]
-        length = len(possible_moves[piece_to_move])
-        where_to_go = randint(0,length-1)
-        
-        current_game.make_moves(possible_moves[piece_to_move][where_to_go])
-        # random_piece = randint(0,len(possible_moves)-1)
-        # current_game.move(possible_moves[move_to_go])
-        # print("CPU moved: " + str(possible_moves[move_to_go]))
-    else:
-        return
-
-# DEPRECIATED
-# draw the current iteration details
-# such as move history, whose turn, and so on.
-def draw_iteration_details(current_game):
-    print("----------------------------------")
-    print()
-
-    current_iteration = len(current_game.moves) + 1
-    print("Current Iteration: " + str(current_iteration)) 
-
-    #
-    print(current_game.moves)
-
-    current_player = current_game.whose_turn()
-    last_move = ''
-    print()
-    if current_iteration > 1:
-        last_move = str(current_game.moves[current_iteration-2])
-    print("Player's Turn: Black") if current_game.whose_turn() == 1 else print("Player's Turn: White")
-    print("Last move by Previous: " + last_move)
-
-    print()
-    print("Overall Move History: " + str(current_game.moves))
 
 # print_winner(current_game)
 # current_game - an active Game object that handles the checker game.
@@ -308,12 +182,11 @@ def print_winner(current_game):
         print("No conclusive winner yet.")
     
 def main():
-    game = Board()
-    #draw_board(game)
-    game.create_board()
+    board = Board()
     pygame_board = PyGameBoard()
 
-    human_vs_cpu_play(game,pygame_board)
+    human_vs_random_play(board, pygame_board)
+    #human_vs_alphabeta(board)
 
     #run_window(game,pygame_board)
     
@@ -340,6 +213,6 @@ def test_bench():
     game = Board()
     game.create_board()
 
-
-main()
-input()
+if __name__ == "__main__" and not flags.interactive:
+    main()
+    input()
