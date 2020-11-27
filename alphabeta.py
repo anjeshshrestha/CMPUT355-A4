@@ -1,7 +1,7 @@
 from copy import deepcopy
 
 INFINITY = 1000000
-MAX_DEPTH = 6 # Don't know how big I can make this
+MAX_DEPTH = 7 # The bigger the better
 
 def alphabeta(board, alpha = -INFINITY, beta = INFINITY, depth = 0):
     if board.has_winner():
@@ -39,8 +39,8 @@ def play_move(board):
             print(f'Found win: {moves[i]}')
             return # This is the best we can do, so keep this move
         ab_results.append(ab)
-    print(moves)
-    print(ab_results)
+    #print(moves)
+    #print(ab_results)
 
     # Pick the move with the best score:
     move_index = ab_results.index(max(ab_results))
@@ -48,7 +48,3 @@ def play_move(board):
     print(f'Playing: {move}')
     board.make_moves(move)
 
-"""
-{(6, 3): [ [(6, 3), (4, 5), (2, 3)] ],
-(6, 5): [ [ [(6, 5), (4, 3), (2, 5)], [(6, 5), (4, 3), (2, 1)] ] ]}
-"""

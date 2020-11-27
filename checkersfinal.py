@@ -1,10 +1,43 @@
 from board import Board
 from random import randint
-import sys
+from sys import flags, exit
 from pygame_board import pygame,PyGameBoard
+import alphabeta
+
+ALPHABETA = 'alphabeta'
+RANDOM = 'random'
+
+def human_vs_alphabeta_no_gui(board):
+    # Use this function to play without the pygame gui
+    # Loop while we don't have a winner
+    while not board.has_winner():
+        # First get user input for white
+        board.print_board()
+        valid_moves = board.print_all_valid_moves()
+        print(valid_moves)
+        print("Select a piece to move:")
+        piece_row = int(input("row: "))
+        piece_col = int(input("column: "))
+        if (piece_row, piece_col) not in valid_moves:
+            print("Not a valid piece")
+            continue
+        print("Select move to make (by index): ")
+        moves_for_piece = valid_moves[piece_row, piece_col]
+        print(moves_for_piece)
+        move_index = int(input())
+        if move_index > len(moves_for_piece):
+            print("Not a valid move index")
+            continue
+        move = moves_for_piece[move_index][1]
+        board.make_moves([(piece_row, piece_col), (move[0], move[1])])
+        board.print_board()
+
+        # Now let our player play for black
+        print("Thinking....")
+        alphabeta.play_move(board)
 
 # checkers game between a person and a random player
-def human_vs_random_play(current_game, pygame_instance = None):
+def human_vs_random_play(current_game, pygame_instance = None, play_strategy = ALPHABETA):
     # allow keyboard input
     # make some sort of cli interface
     # determine who goes first
@@ -31,11 +64,10 @@ def human_vs_random_play(current_game, pygame_instance = None):
         #draw_iteration_details(current_game)
         #draw_board(current_game)
         print("--------------------------------")
-        print("Move:",iterations)
+        print("Move: ",iterations)
         print("Player",current_game.whose_turn(),"- HUMAN PLAY") if human_turn else print("Player",current_game.whose_turn(),"- CPU PLAY")
 
         current_game.print_board()
-        play_strategy = 'random'
 
         print("player 1 pieces count",current_game.player1PiecesCount)
         print("player 2 pieces count",current_game.player2PiecesCount)
@@ -62,10 +94,9 @@ def human_vs_random_play(current_game, pygame_instance = None):
     print(current_game.get_winner())
     #print_winner(current_game)
 
-def play_turn(current_game, is_human = False, game_strategy = 'random'):
+def play_turn(current_game, is_human = False, game_strategy = ALPHABETA):
     possible_moves = current_game.get_all_valid_moves()
-    if is_human: pretty_print_moves(possible_moves)
-    if not is_human: pretty_print_moves(possible_moves)
+    pretty_print_moves(possible_moves)
     piece_to_move = None
     where_to_go = None
 
@@ -73,25 +104,26 @@ def play_turn(current_game, is_human = False, game_strategy = 'random'):
         response = None
         while True:
             print("To quit, simply type a negative number.")
-            response = int(input("Choose piece to move:" ))
+            response = int(input("Choose piece to move (by index): " ))
             if response < len(possible_moves):
                 break
             
         if response < 0:
             #pygame.quit()
-            sys.exit()
+            exit()
         
         piece_to_move = list(possible_moves.keys())[response]
 
         while True:
             #print(possible_moves[piece_to_move])
-            where_to_go = int(input("Move to:"))
+            where_to_go = int(input("Move to (by index): "))
             if where_to_go < len(list(possible_moves[piece_to_move])):
+                current_game.make_moves(possible_moves[piece_to_move][where_to_go])
                 break
     else:
-        if game_strategy == "random":
+        if game_strategy == RANDOM:
             random_number = randint(0,len(possible_moves)-1)
-            print("CPU possible moves len",len(possible_moves))
+            print("Random player possible moves len",len(possible_moves))
             piece_to_move = list(possible_moves.keys())[random_number]
             length = len(possible_moves[piece_to_move])
             where_to_go = randint(0,length-1)
@@ -99,7 +131,10 @@ def play_turn(current_game, is_human = False, game_strategy = 'random'):
             # random_piece = randint(0,len(possible_moves)-1)
             # current_game.move(possible_moves[move_to_go])
             # print("CPU moved: " + str(possible_moves[move_to_go]))
-    current_game.make_moves(possible_moves[piece_to_move][where_to_go])
+            current_game.make_moves(possible_moves[piece_to_move][where_to_go])
+        elif game_strategy == ALPHABETA:
+            print("Thinking....")
+            alphabeta.play_move(current_game)
 
 def pretty_print_moves(dictionary_of_moves):
     piece_index = 0
@@ -141,10 +176,11 @@ def print_winner(current_game):
         print("No conclusive winner yet.")
     
 def main():
-    game = Board()
+    board = Board()
     pygame_board = PyGameBoard()
 
-    human_vs_random_play(game, pygame_board)
+    human_vs_random_play(board, pygame_board)
+    #human_vs_alphabeta(board)
 
     #run_window(game,pygame_board)
     
@@ -171,6 +207,6 @@ def test_bench():
     game = Board()
     game.create_board()
 
-
-main()
-input()
+if __name__ == "__main__" and not flags.interactive:
+    main()
+    input()
