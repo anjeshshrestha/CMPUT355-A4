@@ -391,6 +391,19 @@ class Board:
                 king_count += 1
         return king_count
 
+    def count_pieces_on_home_row(self):
+        # Return the count of the number of pieces on the home row
+        count = 0
+        if self.player == 1:
+            for pos in self.board[0]:
+                if pos != 0:
+                    count += 1
+        else:
+            for pos in self.board[7]:
+                if pos != 0:
+                    count += 1
+        return count
+
     def get_board_heuristic(self):
         # Return a heuristic of the state of the board for
         # the current player
@@ -398,8 +411,9 @@ class Board:
         # of kings between the two players
         p1_king_count = self.get_king_count_for_player(1)
         p2_king_count = self.get_king_count_for_player(2)
+        pieces_on_home_row = self.count_pieces_on_home_row()
         if self.whose_turn() == 1:
-            heuristic = self.player1PiecesCount - self.player2PiecesCount + p1_king_count - p2_king_count
+            heuristic = (self.player1PiecesCount - self.player2PiecesCount) + 3 * (p1_king_count - p2_king_count) + pieces_on_home_row
         else:
-            heuristic = self.player2PiecesCount - self.player1PiecesCount + p2_king_count - p1_king_count
+            heuristic = (self.player2PiecesCount - self.player1PiecesCount) + 3 * (p2_king_count - p1_king_count) + pieces_on_home_row
         return heuristic

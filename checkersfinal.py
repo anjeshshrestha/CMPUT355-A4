@@ -85,12 +85,13 @@ def alphabeta_vs_random_no_gui():
 
 def get_stats():
     # Play the alphabeta player vs the random player and get stats on who wins
-    iterations = 10
+    iterations = 5
     results = []
     for i in range(iterations):
         results.append(random_vs_alphabeta_no_gui())
     for i in range(iterations):
         results.append(alphabeta_vs_random_no_gui())
+    print(f"For the first {iterations} games, random played first, alphabeta played first in the last {iterations}.")
     print(results)
     return results
 

@@ -33,12 +33,16 @@ def alphabeta(board, alpha = -INFINITY, beta = INFINITY, depth = 0):
 def play_move(board):
     moves = board.get_all_valid_moves_as_list()
     ab_results = []
+    if len(moves) == 1:
+        print(f'Only one move: {moves[0]}')
+        board.make_moves(moves[0])
+        return
     for i in range(len(moves)):
         #print(moves)
         #print(ab_results)
         board_copy = deepcopy(board)
         board_copy.make_moves(moves[i])
-        ab = alphabeta(board_copy)
+        ab = -alphabeta(board_copy)
         if ab == WIN:
             print(f'Found win: {moves[i]}')
             board.make_moves(moves[i])
