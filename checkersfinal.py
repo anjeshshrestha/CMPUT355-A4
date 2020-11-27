@@ -66,6 +66,13 @@ def alphabeta_vs_random_no_gui():
     print(f"Random player: {board.player}")
     while not board.has_winner():
         board.print_board()
+        # Alphabeta player plays
+        board.print_board()
+        alphabeta.play_move(board)
+
+        if board.has_winner():
+            break
+
         # Random player plays
         possible_moves = board.get_all_valid_moves()
         random_number = randint(0, len(possible_moves) - 1)
@@ -74,12 +81,6 @@ def alphabeta_vs_random_no_gui():
         where_to_go = randint(0, length - 1)
         board.make_moves(possible_moves[piece_to_move][where_to_go])
 
-        if board.has_winner():
-            break
-
-        # Alphabeta player plays
-        board.print_board()
-        alphabeta.play_move(board)
     return board.get_winner_code()
 
 def get_stats():
