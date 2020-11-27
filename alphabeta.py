@@ -49,6 +49,8 @@ def play_move(board):
 
     # Pick the move with the best score
     # If multiple moves with a best score, pick one at random
+    if len(ab_results) == 0:
+        return # Got called when we shouldn't have, don't make a move
     max_score = max(ab_results)
     move_index = random.choice([i for i in range(len(ab_results)) if ab_results[i] == max_score])
     move = moves[move_index]

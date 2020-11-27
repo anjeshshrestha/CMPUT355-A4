@@ -36,6 +36,63 @@ def human_vs_alphabeta_no_gui(board):
         print("Thinking....")
         alphabeta.play_move(board)
 
+def random_vs_alphabeta_no_gui():
+    # Pit a random player against an alphabeta player
+    # Random is player 1, alphabeta is player 2
+    board = Board()
+    print(f"Random player: {board.player}")
+    while not board.has_winner():
+        board.print_board()
+        # Random player plays
+        possible_moves = board.get_all_valid_moves()
+        random_number = randint(0, len(possible_moves) - 1)
+        piece_to_move = list(possible_moves.keys())[random_number]
+        length = len(possible_moves[piece_to_move])
+        where_to_go = randint(0, length - 1)
+        board.make_moves(possible_moves[piece_to_move][where_to_go])
+
+        if board.has_winner():
+            break
+
+        # Alphabeta player plays
+        board.print_board()
+        alphabeta.play_move(board)
+    return board.get_winner_code()
+
+def alphabeta_vs_random_no_gui():
+    # Pit a random player against an alphabeta player
+    # Alphabeta is player 1, random is player 2
+    board = Board()
+    print(f"Random player: {board.player}")
+    while not board.has_winner():
+        board.print_board()
+        # Random player plays
+        possible_moves = board.get_all_valid_moves()
+        random_number = randint(0, len(possible_moves) - 1)
+        piece_to_move = list(possible_moves.keys())[random_number]
+        length = len(possible_moves[piece_to_move])
+        where_to_go = randint(0, length - 1)
+        board.make_moves(possible_moves[piece_to_move][where_to_go])
+
+        if board.has_winner():
+            break
+
+        # Alphabeta player plays
+        board.print_board()
+        alphabeta.play_move(board)
+    return board.get_winner_code()
+
+def get_stats():
+    # Play the alphabeta player vs the random player and get stats on who wins
+    iterations = 10
+    results = []
+    for i in range(iterations):
+        results.append(random_vs_alphabeta_no_gui())
+    for i in range(iterations):
+        results.append(alphabeta_vs_random_no_gui())
+    print(results)
+    return results
+
 # checkers game between a person and a random player
 def human_vs_random_play(current_game, pygame_instance = None, play_strategy = ALPHABETA):
     # allow keyboard input
@@ -203,7 +260,7 @@ def main():
     #         #     sys.quit()
     #         #     running = False
     #ygame.display.set_caption("Checkers")
-
+    pygame_board.create_board(board.board)
     pygame.display.update()
 
     #game.print_board()

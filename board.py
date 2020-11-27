@@ -124,6 +124,26 @@ class Board:
 
         return "Player " + str((self.player % 2) + 1) + " is Winner"
 
+    def get_winner_code(self):
+        # Return the player number of who won
+        if self.player1PiecesCount == 0:
+            return 2
+        elif self.player2PiecesCount == 0:
+            return 1
+        elif self.player1PiecesCount == self.player2PiecesCount:
+            p1King = 0
+            p2King = 0
+            for k in self.player1Pieces:
+                if k.king:
+                    p1King += 1
+            for k in self.player2Pieces:
+                if k.king:
+                    p2King += 1
+            if p1King == p2King:
+                return 0
+
+        return (self.player % 2) + 1
+
     def to_play_won(self):
         if self.whose_turn() == 1 and self.player2PiecesCount == 0:
             return True
