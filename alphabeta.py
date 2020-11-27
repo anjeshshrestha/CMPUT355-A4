@@ -56,6 +56,7 @@ def play_move(board):
     if len(ab_results) == 0:
         return # Got called when we shouldn't have, don't make a move
     max_score = max(ab_results)
+    # The following line was taken from here: https://stackoverflow.com/questions/57548827/how-to-get-a-random-maximum-from-a-list
     move_index = random.choice([i for i in range(len(ab_results)) if ab_results[i] == max_score])
     move = moves[move_index]
     print(f'Playing: {move}')
