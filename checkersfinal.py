@@ -9,7 +9,7 @@ from pygame_board import pygame,PyGameBoard
 
 SLEEP_DURATION = 1         # PyGame board switches too fast, this keeps it under control
                            # Make 0 to speed up simulations, sleep function uses seconds.
-DEBUG_MODE     = False     # Turn on printing of variables
+DEBUG_MODE     = False     # Turn on printing of variables.
 CPU_STRATEGY   = 'random'  # Currently available are: 'random',...
 PYGAME_BOARD   = True      # Use the PyGameBoard. PyGame must be installed on your system.
 
@@ -51,14 +51,13 @@ def human_vs_cpu_play(current_game,pygame_instance = None):
             print("player 1 pieces count",current_game.player1PiecesCount)
             print("player 2 pieces count",current_game.player2PiecesCount)
         
-    
         if pygame_instance:
             # for some reason, PyGame has issues if these events aren't handled with.
             # that's why it's passed.
             # Since PyGame is used for visual only, CLI is still primary way to play the game.
             for event in pygame.event.get(): pass
 
-            pygame_instance.create_board(current_game.board) # this updates the board in the game class
+            pygame_instance.create_board(current_game.board) # this updates the board copy in the game class
             pygame.display.update()
             play_turn(current_game,human_turn,CPU_STRATEGY) 
             sleep(SLEEP_DURATION) # Normally, modern computers blaze through simulations
@@ -72,12 +71,11 @@ def human_vs_cpu_play(current_game,pygame_instance = None):
 
         game_over = current_game.has_winner()
     
-    print("--------------------------")
+    print("--------------------------------")
     
     print("Final Move:",number_of_moves)
     current_game.print_board()
     current_game.get_winner()
-    pygame.quit()
     exit()
 
 
@@ -89,8 +87,10 @@ def human_vs_cpu_play(current_game,pygame_instance = None):
 # game_strategy - the game strategy for the CPU. By default, it is random.
 def play_turn(current_game,is_human = False,game_strategy = 'random'):
     possible_moves = current_game.get_all_valid_moves()
+
     if is_human: pretty_print_moves(possible_moves)
     if not is_human and DEBUG_MODE: pretty_print_moves(possible_moves)
+
     piece_to_move = where_to_go = None
 
     if is_human:
@@ -139,7 +139,7 @@ def pretty_print_moves(dictionary_of_moves):
             move_index += 1
         piece_index += 1
 
-    
+
 def main():
     game = Board()
     game.create_board()

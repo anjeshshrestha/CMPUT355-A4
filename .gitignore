@@ -127,3 +127,13 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+old/boarda.py
+old/boardV2a copy 2.py
+old/boardV2a copy 3.py
+old/boardV2a copy.py
+old/boardV2a.py
+old/piecea.py
+old/boardV2.py
+.vscode/settings.json
+.DS_Store
+areez_board.py

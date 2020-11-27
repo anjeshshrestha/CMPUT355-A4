@@ -1,15 +1,14 @@
 import pygame
 
 #board dimensions
-(WIDTH, HEIGHT) = (600,600)
+WIDTH, HEIGHT = (600,600)
 BROWN = (156, 117, 0)
 BLACK = (0, 0, 0)
 WHITE = (255,255,255)
 GREY  = (177,177,177)
 RED   = (255,0,0)
 PINK  = (255, 128, 128)
-ROWS = 8
-COLS = 8
+ROWS, COLS = 8,8
 
 class PyGameBoard:
     def __init__(self):
@@ -19,9 +18,9 @@ class PyGameBoard:
         self.rows = ROWS
         self.cols = COLS
         self.board = []
-        self.square_size = height // rows
+        self.square_size = HEIGHT // ROWS
         self.caption = "Checkers"
-        self.window_instance = pygame.display.set_mode((width,height))
+        self.window_instance = pygame.display.set_mode((WIDTH,HEIGHT))
         pygame.display.set_caption(self.caption)
 
     def update_piece_positions(self,board):
@@ -52,6 +51,7 @@ class PyGameBoard:
                 else:
                     square_width_center = (piece.col * self.square_size) + self.square_size//2
                     square_height_center = (piece.row * self.square_size) + self.square_size//2
+                    
                     fill_color = piece.color
                     if piece.king == True:
                         fill_color = GREY if piece.color == "WHITE" else PINK
