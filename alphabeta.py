@@ -1,4 +1,5 @@
 from copy import deepcopy
+import random
 
 INFINITY = 1000000
 MAX_DEPTH = 4 # The bigger the better
@@ -47,8 +48,9 @@ def play_move(board):
     #print(ab_results)
 
     # Pick the move with the best score
-    # TODO: If multiple moves with a best score, pick one at random
-    move_index = ab_results.index(max(ab_results))
+    # If multiple moves with a best score, pick one at random
+    max_score = max(ab_results)
+    move_index = random.choice([i for i in range(len(ab_results)) if ab_results[i] == max_score])
     move = moves[move_index]
     print(f'Playing: {move}')
     board.make_moves(move)
