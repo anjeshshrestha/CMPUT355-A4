@@ -63,7 +63,7 @@ def alphabeta_vs_random_no_gui():
     # Pit a random player against an alphabeta player
     # Alphabeta is player 1, random is player 2
     board = Board()
-    print(f"Random player: {board.player}")
+    print(f"Alphabeta player: {board.player}")
     while not board.has_winner():
         board.print_board()
         # Alphabeta player plays
